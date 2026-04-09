@@ -1,44 +1,30 @@
 package com.work.todo
 
-import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
+import androidx.recyclerview.widget.RecyclerView
 import com.work.todo.databinding.ItemTaskBinding
 
 class TaskAdapter(
-    private val context: Context,
-    private val tasks: MutableList<Task>
-) : BaseAdapter() {
+    private val tasks: List<Task>,
+    private val onItemClick: (Task) -> Unit,
+    private val onDeleteClick: (Int) -> Unit,
+) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
 
-    private val inflater = LayoutInflater.from(context)
+    class TaskViewHolder(val binding: ItemTaskBinding) : RecyclerView.ViewHolder(binding.root)
 
-    override fun getCount(): Int = tasks.size
-
-    override fun getItem(position: Int): Task = tasks[position]
-
-    override fun getItemId(position: Int): Long = position.toLong()
-
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val binding: ItemTaskBinding
-        val view: View
-
-        if (convertView == null) {
-            binding = ItemTaskBinding.inflate(inflater, parent, false)
-            view = binding.root
-            view.tag = binding
-        } else {
-            view = convertView
-            binding = view.tag as ItemTaskBinding
-        }
-
-        val task = tasks[position]
-        binding.tvTaskText.text = task.title
-        binding.btnDelete.setOnClickListener {
-            tasks.removeAt(position)
-            notifyDataSetChanged()
-        }
-        return view
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+        val binding = ItemTaskBinding.inflate(inflater, parent, false)
+        return TaskViewHolder(binding)
     }
+
+    override fun onBindViewHolder(holder: TaskViewHolder, position: Int) {
+        val task = tasks[position]
+        holder.binding.tvTaskText.text = task.title
+        holder.itemView.setOnClickListener { onItemClick(task) }
+        holder.binding.btnDelete.setOnClickListener { onDeleteClick(position) }
+    }
+
+    override fun getItemCount(): Int = tasks.size
 }

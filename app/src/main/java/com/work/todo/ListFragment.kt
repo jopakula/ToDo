@@ -24,6 +24,7 @@ class ListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         binding.buttonBack.setOnClickListener {
             findNavController().popBackStack()
         }
@@ -32,21 +33,39 @@ class ListFragment : Fragment() {
             Task("Купить молоко", "Нужно 2 литра жирность 3.2%"),
             Task("Сделать проект", "Допилить навигацию и списки"),
             Task("Покормить кота", "А то меня он сожрет"),
-            Task("Понять почему list view устарел", "Тк я тупой и не понимаю")
         )
 
-        val adapter = TaskAdapter(requireContext(), tasks)
-
-        binding.listView.adapter = adapter
-
-        binding.listView.setOnItemClickListener { _, _, position, _ ->
-            val selectedTask = tasks[position]
-
-            val bundle = Bundle().apply {
-                putSerializable("task", selectedTask)
+        val taskAdapter = TaskAdapter(
+            tasks = tasks,
+            onItemClick = { selectedTask ->
+                val bundle = Bundle().apply { putSerializable("task", selectedTask) }
+                findNavController().navigate(R.id.action_listFragment_to_detailFragment, bundle)
+            },
+            onDeleteClick = { position ->
+                tasks.removeAt(position)
+                binding.recyclerView.adapter?.notifyItemRemoved(position)
             }
+        )
 
-            findNavController().navigate(R.id.action_listFragment_to_detailFragment, bundle)
+        binding.recyclerView.adapter = taskAdapter
+
+        binding.buttonAdd.setOnClickListener {
+            val title = binding.editTextTask.text.toString()
+            val description = binding.editTextDescription.text.toString()
+
+            if (title.isNotBlank()) {
+
+                val finalDescription = description.ifBlank { "No description" }
+                val newTask = Task(title, finalDescription)
+
+                tasks.add(0, newTask)
+
+                taskAdapter.notifyItemInserted(0)
+
+                binding.editTextTask.text.clear()
+                binding.editTextDescription.text.clear()
+
+            }
         }
 
     }
