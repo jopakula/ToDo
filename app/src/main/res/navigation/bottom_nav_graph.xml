@@ -14,10 +14,18 @@
         android:id="@+id/home"
         android:name="com.work.todo.ui.home.HomeFragment"
         android:label="fragment_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_home_to_allTasksFragment"
+            app:destination="@id/allTasksFragment" />
+    </fragment>
     <fragment
         android:id="@+id/task"
         android:name="com.work.todo.ui.task.TaskFragment"
         android:label="fragment_task"
         tools:layout="@layout/fragment_task" />
+    <fragment
+        android:id="@+id/allTasksFragment"
+        android:name="com.work.todo.ui.allTasks.AllTasksFragment"
+        android:label="AllTasksFragment" />
 </navigation>

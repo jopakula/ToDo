@@ -1,10 +1,11 @@
-package com.work.todo.ui.home.adapters
+package com.work.todo.ui.home.category
 
+import android.graphics.PorterDuff
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.work.todo.databinding.HomeItemCategoryBinding
-import com.work.todo.ui.home.models.HomeCategoryItem
 
 class HomeCategoryAdapter(
     private val items: List<HomeCategoryItem>,
@@ -19,9 +20,9 @@ class HomeCategoryAdapter(
                 tvCatTitle.text = item.title
                 ivCatIcon.setImageResource(item.iconRes)
                 val color =
-                    androidx.core.content.ContextCompat.getColor(root.context, item.colorRes)
+                    ContextCompat.getColor(root.context, item.colorRes)
                 tvCatTitle.setTextColor(color)
-                ivCatIcon.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN)
+                ivCatIcon.setColorFilter(color, PorterDuff.Mode.SRC_IN)
                 root.setOnClickListener { onClick(item, position) }
             }
         }

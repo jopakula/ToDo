@@ -1,4 +1,4 @@
-package com.work.todo.ui.home.models
+package com.work.todo.ui.home.task
 
 data class HomeTaskItem(
     val id: Int,

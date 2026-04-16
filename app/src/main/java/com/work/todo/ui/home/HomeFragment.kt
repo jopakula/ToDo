@@ -6,14 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.work.todo.R
 import com.work.todo.databinding.FragmentHomeBinding
-import com.work.todo.ui.home.adapters.HomeCategoryAdapter
-import com.work.todo.ui.home.adapters.HomeTaskAdapter
-import com.work.todo.ui.home.models.HomeCategoryItem
-import com.work.todo.ui.home.models.HomeTaskItem
+import com.work.todo.ui.home.category.HomeCategoryAdapter
+import com.work.todo.ui.home.category.HomeCategoryItem
+import com.work.todo.ui.home.task.HomeTaskItem
+import com.work.todo.ui.home.task.HomeTodaysTaskAdapter
 
 
 class HomeFragment : Fragment() {
@@ -21,7 +22,7 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var adapter: HomeTaskAdapter
+    private lateinit var adapter: HomeTodaysTaskAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -59,7 +60,7 @@ class HomeFragment : Fragment() {
         }
 
 
-        adapter = HomeTaskAdapter(
+        adapter = HomeTodaysTaskAdapter(
             tasks = dummyTasks,
             onItemClick = { task, position ->
                 task.isDone = !task.isDone
@@ -84,6 +85,10 @@ class HomeFragment : Fragment() {
 
         binding.rvTasks.layoutManager = LinearLayoutManager(requireContext())
         binding.rvTasks.adapter = adapter
+
+        binding.tvSeeAll.setOnClickListener {
+            findNavController().navigate(R.id.action_home_to_allTasksFragment)
+        }
     }
 
     override fun onDestroyView() {

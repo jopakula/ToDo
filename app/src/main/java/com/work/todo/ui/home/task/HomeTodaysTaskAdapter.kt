@@ -1,16 +1,15 @@
-package com.work.todo.ui.home.adapters
+package com.work.todo.ui.home.task
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.work.todo.databinding.ItemTaskHomeBinding
-import com.work.todo.ui.home.models.HomeTaskItem
 
-class HomeTaskAdapter(
+class HomeTodaysTaskAdapter(
     private val tasks: List<HomeTaskItem>,
     private val onItemClick: (HomeTaskItem, Int) -> Unit,
     private val onCheckboxChange: (HomeTaskItem, Int, Boolean) -> Unit
-) : RecyclerView.Adapter<HomeTaskAdapter.TaskViewHolder>() {
+) : RecyclerView.Adapter<HomeTodaysTaskAdapter.TaskViewHolder>() {
 
     class TaskViewHolder(val binding: ItemTaskHomeBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(
