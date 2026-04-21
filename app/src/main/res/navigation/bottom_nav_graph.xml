@@ -16,16 +16,22 @@
         android:label="fragment_home"
         tools:layout="@layout/fragment_home">
         <action
-            android:id="@+id/action_home_to_allTasksFragment"
-            app:destination="@id/allTasksFragment" />
+            android:id="@+id/action_home_to_allTasks"
+            app:destination="@id/allTasks" />
+        <action
+            android:id="@+id/action_home_to_editTask"
+            app:destination="@id/editTask" />
     </fragment>
     <fragment
-        android:id="@+id/task"
-        android:name="com.work.todo.ui.task.TaskFragment"
-        android:label="fragment_task"
-        tools:layout="@layout/fragment_task" />
-    <fragment
-        android:id="@+id/allTasksFragment"
+        android:id="@+id/allTasks"
         android:name="com.work.todo.ui.allTasks.AllTasksFragment"
-        android:label="AllTasksFragment" />
+        android:label="fragment_all_tasks" />
+    <fragment
+        android:id="@+id/addTask"
+        android:name="com.work.todo.ui.addTask.AddTaskFragment"
+        android:label="fragment_add_task" />
+    <fragment
+        android:id="@+id/editTask"
+        android:name="com.work.todo.ui.editTask.EditTaskFragment"
+        android:label="fragment_edit_task" />
 </navigation>

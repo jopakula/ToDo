@@ -63,13 +63,7 @@ class HomeFragment : Fragment() {
         adapter = HomeTodaysTaskAdapter(
             tasks = dummyTasks,
             onItemClick = { task, position ->
-                task.isDone = !task.isDone
-                adapter.notifyItemChanged(position)
-                Toast.makeText(
-                    requireContext(),
-                    "Нажат элемент №$position: ${task.title}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                findNavController().navigate(R.id.action_home_to_editTask)
             },
             onCheckboxChange = { task, position, isChecked ->
                 task.isDone = isChecked
@@ -87,7 +81,7 @@ class HomeFragment : Fragment() {
         binding.rvTasks.adapter = adapter
 
         binding.tvSeeAll.setOnClickListener {
-            findNavController().navigate(R.id.action_home_to_allTasksFragment)
+            findNavController().navigate(R.id.action_home_to_allTasks)
         }
     }
 
