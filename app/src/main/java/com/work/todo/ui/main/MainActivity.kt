@@ -1,6 +1,8 @@
 package com.work.todo.ui.main
 
+import android.animation.Animator
 import android.os.Bundle
+import android.view.View
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.get
@@ -20,6 +22,24 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        binding.lottieContainer.isClickable = true
+        binding.lottieContainer.isFocusable = true
+
+        binding.lottieAnimationView.addAnimatorListener(object : Animator.AnimatorListener {
+            override fun onAnimationEnd(animation: Animator) {
+                binding.lottieContainer.animate()
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction {
+                        binding.lottieContainer.visibility = View.GONE
+                    }
+            }
+
+            override fun onAnimationStart(animation: Animator) {}
+            override fun onAnimationCancel(animation: Animator) {}
+            override fun onAnimationRepeat(animation: Animator) {}
+        })
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
