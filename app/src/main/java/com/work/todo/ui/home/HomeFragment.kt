@@ -12,9 +12,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.work.todo.R
 import com.work.todo.databinding.FragmentHomeBinding
 import com.work.todo.ui.home.category.HomeCategoryAdapter
-import com.work.todo.ui.home.category.HomeCategoryItem
 import com.work.todo.ui.home.task.HomeTaskItem
 import com.work.todo.ui.home.task.HomeTodaysTaskAdapter
+import com.work.todo.ui.mapper.CategoryMapper
 
 
 class HomeFragment : Fragment() {
@@ -35,12 +35,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val categories = listOf(
-            HomeCategoryItem(1, "Work", R.drawable.ic_category_work, R.color.blue),
-            HomeCategoryItem(2, "Personal", R.drawable.ic_category_personal, R.color.orange),
-            HomeCategoryItem(3, "Shopping", R.drawable.ic_category_shopping, R.color.yellow),
-            HomeCategoryItem(4, "Health", R.drawable.ic_category_health, R.color.red)
-        )
+        val categories = CategoryMapper.getUiCategories()
 
         val dummyTasks = listOf(
             HomeTaskItem(1, "Finish Report", "10:00 am", true),

@@ -8,14 +8,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.work.todo.databinding.HomeItemCategoryBinding
 
 class HomeCategoryAdapter(
-    private val items: List<HomeCategoryItem>,
-    private val onItemClick: (HomeCategoryItem, Int) -> Unit,
+    private val items: List<CategoryItem>,
+    private val onItemClick: (CategoryItem, Int) -> Unit,
 ) :
     RecyclerView.Adapter<HomeCategoryAdapter.CategoryViewHolder>() {
 
     class CategoryViewHolder(val binding: HomeItemCategoryBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: HomeCategoryItem, position: Int, onClick: (HomeCategoryItem, Int) -> Unit) {
+        fun bind(item: CategoryItem, position: Int, onClick: (CategoryItem, Int) -> Unit) {
             with(binding) {
                 tvCatTitle.text = item.title
                 ivCatIcon.setImageResource(item.iconRes)

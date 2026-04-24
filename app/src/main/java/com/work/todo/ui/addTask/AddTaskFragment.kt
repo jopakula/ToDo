@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -13,6 +14,9 @@ import com.work.todo.database.TaskCategory
 import com.work.todo.database.TaskDao
 import com.work.todo.database.TaskEntity
 import com.work.todo.databinding.FragmentAddTaskBinding
+import com.work.todo.databinding.ItemCategoryDropdownBinding
+import com.work.todo.ui.home.category.CategoryItem
+import com.work.todo.ui.mapper.CategoryMapper
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -20,6 +24,9 @@ class AddTaskFragment : Fragment() {
 
     private var _binding: FragmentAddTaskBinding? = null
     private val binding get() = _binding!!
+
+    private var selectedCategory: TaskCategory = TaskCategory.WORK
+    private var isMenuExpanded = false
 
     private val taskDao: TaskDao by inject()
 
@@ -36,6 +43,10 @@ class AddTaskFragment : Fragment() {
 
         setupUI()
 
+        binding.btnSelectCategory.setOnClickListener {
+            setupCategoryMenu()
+        }
+
         binding.fabDone.setOnClickListener {
             saveTask()
         }
@@ -47,7 +58,7 @@ class AddTaskFragment : Fragment() {
 
         val date = "2024-05-20"
         val time = "12:00"
-        val category = TaskCategory.WORK
+        val category = selectedCategory
 
         if (title.isEmpty()) {
             Toast.makeText(requireContext(), "Введите название задачи", Toast.LENGTH_SHORT).show()
@@ -98,5 +109,48 @@ class AddTaskFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun setupCategoryMenu() {
+        val categories = CategoryMapper.getUiCategories()
+        val container = binding.llCategoryOptions
+
+        container.removeAllViews()
+
+        categories.forEach { item ->
+            val itemBinding = ItemCategoryDropdownBinding.inflate(
+                layoutInflater,
+                container,
+                false
+            )
+
+            itemBinding.tvCategoryName.text = item.title
+            itemBinding.ivCategoryIcon.setImageResource(item.iconRes)
+            itemBinding.ivCategoryIcon.setColorFilter(
+                ContextCompat.getColor(requireContext(), item.colorRes)
+            )
+
+            itemBinding.root.setOnClickListener {
+                selectCategory(item)
+                toggleMenu()
+            }
+
+            container.addView(itemBinding.root)
+        }
+
+        binding.btnSelectCategory.setOnClickListener {
+            toggleMenu()
+        }
+    }
+
+    private fun selectCategory(item: CategoryItem) {
+        selectedCategory = item.categoryType
+        binding.tvSelectedCategory.text = item.title
+    }
+
+    private fun toggleMenu() {
+        isMenuExpanded = !isMenuExpanded
+        binding.ivCategoryArrow.animate().rotation(if (isMenuExpanded) 180f else 0f).start()
+        binding.llCategoryOptions.visibility = if (isMenuExpanded) View.VISIBLE else View.GONE
     }
 }

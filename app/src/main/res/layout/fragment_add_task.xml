@@ -64,27 +64,46 @@
                 style="@style/LabelStyle"
                 android:text="Category" />
 
-            <FrameLayout
-                android:id="@+id/btnSelectCategory"
+            <LinearLayout
+                android:id="@+id/containerCategory"
                 android:layout_width="match_parent"
-                android:layout_height="55dp"
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
                 android:background="@drawable/bg_search_input_home"
-                android:paddingHorizontal="15dp">
+                android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <FrameLayout
+                    android:id="@+id/btnSelectCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:background="@android:color/transparent"
+                    android:paddingHorizontal="15dp">
+
+                    <TextView
+                        android:id="@+id/tvSelectedCategory"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:text="Work"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:id="@+id/ivCategoryArrow"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center_vertical|end"
+                        android:src="@drawable/ic_arrow_bottom"
+                        app:tint="#4A90E2" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:id="@+id/llCategoryOptions"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:text="Work"
-                    android:textSize="16sp" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center_vertical|end"
-                    android:src="@drawable/ic_arrow_bottom"
-                    app:tint="#4A90E2" />
-            </FrameLayout>
+                    android:orientation="vertical"
+                    android:padding="5dp"
+                    android:visibility="gone" />
+            </LinearLayout>
 
             <TextView
                 style="@style/LabelStyle"
