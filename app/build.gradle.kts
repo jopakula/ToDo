@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -40,6 +41,13 @@ android {
 }
 
 dependencies {
+
+    implementation(libs.koin.androidx.compose)
+    implementation(libs.koin.core)
+
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     implementation(libs.lottie)
 
