@@ -1,52 +1,54 @@
 package com.work.todo.ui.allTasks
 
-import android.R
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.work.todo.databinding.ItemAllTasksBinding
 
 class AllTasksAdapter(
-    private val tasks: List<AllTasksItem>,
-    private val onCheckChanged: (AllTasksItem, Int, Boolean) -> Unit,
-    private val onDeleteClicked: (AllTasksItem, Int) -> Unit
+    private val onCheckChanged: (AllTasksItem, Boolean) -> Unit,
+    private val onDeleteClicked: (AllTasksItem) -> Unit
 ) : RecyclerView.Adapter<AllTasksAdapter.AllTasksViewHolder>() {
 
-    class AllTasksViewHolder(val binding: ItemAllTasksBinding) :
-        RecyclerView.ViewHolder(binding.root)
+    private val diffCallback = object : DiffUtil.ItemCallback<AllTasksItem>() {
+        override fun areItemsTheSame(oldItem: AllTasksItem, newItem: AllTasksItem) =
+            oldItem.id == newItem.id
+
+        override fun areContentsTheSame(oldItem: AllTasksItem, newItem: AllTasksItem) =
+            oldItem == newItem
+    }
+    private val differ = AsyncListDiffer(this, diffCallback)
+
+    fun submitList(list: List<AllTasksItem>) = differ.submitList(list)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AllTasksViewHolder {
-        val binding = ItemAllTasksBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
-        )
+        val binding =
+            ItemAllTasksBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return AllTasksViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: AllTasksViewHolder, position: Int) {
-        val item = tasks[position]
-        val context = holder.itemView.context
-
+        val item = differ.currentList[position]
         with(holder.binding) {
             tvTaskTitle.text = item.title
             tvTaskDateTime.text = item.dateTimeInfo
-            if (item.isOverdue && !item.isDone) {
-                tvTaskDateTime.setTextColor(ContextCompat.getColor(context, R.color.holo_red_light))
-            } else {
-                tvTaskDateTime.setTextColor(ContextCompat.getColor(context, R.color.darker_gray))
-            }
+
+            tvTaskDateTime.setTextColor(
+                if (item.isOverdue) Color.RED else Color.GRAY
+            )
 
             cbDone.setOnCheckedChangeListener(null)
             cbDone.isChecked = item.isDone
-            cbDone.setOnCheckedChangeListener { _, isChecked ->
-                onCheckChanged(item, position, isChecked)
-            }
+            cbDone.setOnCheckedChangeListener { _, isChecked -> onCheckChanged(item, isChecked) }
 
-            tvDelete.setOnClickListener {
-                onDeleteClicked(item, position)
-            }
+            tvDelete.setOnClickListener { onDeleteClicked(item) }
         }
     }
 
-    override fun getItemCount() = tasks.size
+    override fun getItemCount() = differ.currentList.size
+    class AllTasksViewHolder(val binding: ItemAllTasksBinding) :
+        RecyclerView.ViewHolder(binding.root)
 }

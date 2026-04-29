@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
+    alias { libs.plugins.androidx.navigation.safeargs }
 }
 
 android {
@@ -42,19 +43,24 @@ android {
 
 dependencies {
 
+    // koin
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.core)
 
+    // room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+
+    // ksp
     ksp(libs.androidx.room.compiler)
 
+    // lottie
     implementation(libs.lottie)
 
-    implementation(libs.androidx.fragment)
-
+    // navigation
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.fragment)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

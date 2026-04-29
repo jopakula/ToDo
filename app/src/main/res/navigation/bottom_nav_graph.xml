@@ -28,10 +28,15 @@
         android:label="fragment_all_tasks" />
     <fragment
         android:id="@+id/addTask"
-        android:name="com.work.todo.ui.addTask.AddTaskFragment"
+        android:name="com.work.todo.ui.task.addTask.AddTaskFragment"
         android:label="fragment_add_task" />
     <fragment
         android:id="@+id/editTask"
-        android:name="com.work.todo.ui.editTask.EditTaskFragment"
-        android:label="fragment_edit_task" />
+        android:name="com.work.todo.ui.task.editTask.EditTaskFragment"
+        android:label="fragment_edit_task">
+        <argument
+            android:name="taskId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+    </fragment>
 </navigation>

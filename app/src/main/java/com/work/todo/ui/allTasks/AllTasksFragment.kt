@@ -4,59 +4,76 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.work.todo.R
 import com.work.todo.databinding.FragmentAllTasksBinding
+import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class AllTasksFragment : Fragment(R.layout.fragment_all_tasks) {
 
     private var _binding: FragmentAllTasksBinding? = null
     private val binding get() = _binding!!
 
+    private val viewModel: AllTasksViewModel by viewModel()
+    private lateinit var overdueAdapter: AllTasksAdapter
+    private lateinit var regularAdapter: AllTasksAdapter
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentAllTasksBinding.bind(view)
 
-        val allTasks = listOf(
-            AllTasksItem(1, "Finish Report", "Thur, 7 Sept 2023", isOverdue = true),
-            AllTasksItem(5, "Submit quarterly report", "Thur, 7 Sept 2023", isOverdue = true),
-            AllTasksItem(6, "Call mom", "Thur, 7 Sept 2023", isOverdue = true),
-            AllTasksItem(2, "Read Book", "Thur, 7 Sept 2023", isOverdue = false),
-            AllTasksItem(3, "Water Plants", "Thur, 7 Sept 2023", isOverdue = false),
-            AllTasksItem(7, "Gym session", "Fri, 8 Sept 2023", isOverdue = false),
-            AllTasksItem(8, "Team meeting", "Fri, 8 Sept 2023", isOverdue = false),
-            AllTasksItem(17, "Weekly team sync", "Mon, 11 Sept 2023", isOverdue = false),
-            AllTasksItem(18, "Client presentation", "Mon, 11 Sept 2023", isOverdue = false),
-            AllTasksItem(19, "Email follow‑ups", "Mon, 11 Sept 2023", isOverdue = false)
+        setupAdapters()
+        observeViewModel()
+
+        binding.tvBack.setOnClickListener { findNavController().popBackStack() }
+    }
+
+    private fun setupAdapters() {
+        overdueAdapter = AllTasksAdapter(
+            onCheckChanged = { item, checked -> viewModel.toggleTaskStatus(item.id, checked) },
+            onDeleteClicked = { item -> viewModel.deleteTask(item.id) }
         )
 
-
-        val overdueTasks = allTasks.filter { it.isOverdue }
-        val regularTasks = allTasks.filter { !it.isOverdue }
-
-        val overdueAdapter = AllTasksAdapter(
-            tasks = overdueTasks,
-            onCheckChanged = { item, position, checked -> item.isDone = checked },
-            onDeleteClicked = { item, position ->
-                Toast.makeText(context, "Deleted: ${item.title}", Toast.LENGTH_SHORT).show()
-            }
+        regularAdapter = AllTasksAdapter(
+            onCheckChanged = { item, checked -> viewModel.toggleTaskStatus(item.id, checked) },
+            onDeleteClicked = { item -> viewModel.deleteTask(item.id) }
         )
-        binding.rvOverdueTasks.layoutManager = LinearLayoutManager(requireContext())
+
         binding.rvOverdueTasks.adapter = overdueAdapter
-
-        val allTasksAdapter = AllTasksAdapter(
-            tasks = regularTasks,
-            onCheckChanged = { item, position, checked -> item.isDone = checked },
-            onDeleteClicked = { item, position ->
-                Toast.makeText(context, "Deleted: ${item.title}", Toast.LENGTH_SHORT).show()
-            }
-        )
+        binding.rvAllTasksList.adapter = regularAdapter
         binding.rvAllTasksList.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvAllTasksList.adapter = allTasksAdapter
+        binding.rvOverdueTasks.layoutManager = LinearLayoutManager(requireContext())
 
-        binding.tvBack.setOnClickListener {
-            findNavController().popBackStack()
+    }
+
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    when (state) {
+                        is AllTasksState.Loading -> {}
+                        is AllTasksState.Success -> {
+                            overdueAdapter.submitList(state.overdueTasks)
+                            regularAdapter.submitList(state.regularTasks)
+                        }
+
+                        is AllTasksState.Empty -> {
+                            overdueAdapter.submitList(emptyList())
+                            regularAdapter.submitList(emptyList())
+                        }
+
+                        is AllTasksState.Error -> {
+                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+                }
+            }
         }
     }
 

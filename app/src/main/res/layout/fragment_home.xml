@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#85ADD3"
@@ -11,17 +12,17 @@
         android:layout_height="wrap_content"
         android:paddingBottom="100dp">
 
-        <EditText
-            android:id="@+id/etSearch"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_margin="16dp"
-            android:hint="Search for Tasks..."
-            android:background="@drawable/bg_search_input_home"
-            android:drawableStart="@android:drawable/ic_menu_search"
-            android:paddingHorizontal="16dp"
-            android:drawablePadding="8dp"
-            app:layout_constraintTop_toTopOf="parent" />
+        <!--        <EditText-->
+        <!--            android:id="@+id/etSearch"-->
+        <!--            android:layout_width="match_parent"-->
+        <!--            android:layout_height="50dp"-->
+        <!--            android:layout_margin="16dp"-->
+        <!--            android:hint="Search for Tasks..."-->
+        <!--            android:background="@drawable/bg_search_input_home"-->
+        <!--            android:drawableStart="@android:drawable/ic_menu_search"-->
+        <!--            android:paddingHorizontal="16dp"-->
+        <!--            android:drawablePadding="8dp"-->
+        <!--            app:layout_constraintTop_toTopOf="parent" />-->
 
         <TextView
             android:id="@+id/tvCatLabel"
@@ -33,7 +34,7 @@
             android:textStyle="bold"
             android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/etSearch" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvCategories"
@@ -80,8 +81,36 @@
             android:clipToPadding="false"
             android:overScrollMode="never"
             android:nestedScrollingEnabled="false"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvTaskLabel" />
+
+        <LinearLayout
+            android:id="@+id/llNoTasks"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_marginTop="40dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTaskLabel"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@android:drawable/ic_menu_edit"
+                android:contentDescription="No tasks"
+                app:tint="#D9E7F5" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No tasks for today"
+                android:textColor="#D9E7F5"
+                android:textSize="16sp"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

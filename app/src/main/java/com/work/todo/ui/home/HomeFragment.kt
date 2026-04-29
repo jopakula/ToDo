@@ -6,22 +6,26 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.work.todo.R
 import com.work.todo.databinding.FragmentHomeBinding
 import com.work.todo.ui.home.category.HomeCategoryAdapter
-import com.work.todo.ui.home.task.HomeTaskItem
 import com.work.todo.ui.home.task.HomeTodaysTaskAdapter
 import com.work.todo.ui.mapper.CategoryMapper
-
+import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
+    private val viewModel: HomeViewModel by viewModel()
     private lateinit var adapter: HomeTodaysTaskAdapter
 
     override fun onCreateView(
@@ -35,48 +39,64 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val categories = CategoryMapper.getUiCategories()
-
-        val dummyTasks = listOf(
-            HomeTaskItem(1, "Finish Report", "10:00 am", true),
-            HomeTaskItem(2, "Gym Workout", "12:00 pm", false),
-            HomeTaskItem(3, "Project Meeting", "02:00 pm", false),
-            HomeTaskItem(4, "Read Chapter 3", "04:00 pm", false),
-            HomeTaskItem(5, "Cook Dinner", "07:00 pm", false),
-            HomeTaskItem(6, "Call Mom", "09:00 am", true),
-            HomeTaskItem(7, "Buy Groceries", "01:30 pm", false),
-            HomeTaskItem(8, "Review Code", "03:45 pm", false),
-            HomeTaskItem(9, "Watch Tutorial", "06:15 pm", false),
-            HomeTaskItem(10, "Reply to Emails", "08:30 pm", false)
-        )
-
-        val categoryAdapter = HomeCategoryAdapter(categories) { item, position ->
-            Toast.makeText(requireContext(), "Category: ${item.title}", Toast.LENGTH_SHORT).show()
-        }
-
-
-        adapter = HomeTodaysTaskAdapter(
-            tasks = dummyTasks,
-            onItemClick = { task, position ->
-                findNavController().navigate(R.id.action_home_to_editTask)
-            },
-            onCheckboxChange = { task, position, isChecked ->
-                task.isDone = isChecked
-                Toast.makeText(
-                    requireContext(),
-                    "Элемент $position: ${task.title} теперь имеет статус: $isChecked",
-                    Toast.LENGTH_SHORT
-                ).show()
-            })
-
-        binding.rvCategories.layoutManager = GridLayoutManager(requireContext(), 2)
-        binding.rvCategories.adapter = categoryAdapter
-
-        binding.rvTasks.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvTasks.adapter = adapter
+        setupRecyclerViews()
+        setupObservers()
 
         binding.tvSeeAll.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_allTasks)
+        }
+    }
+
+    private fun setupRecyclerViews() {
+        val categories = CategoryMapper.getUiCategories()
+        binding.rvCategories.layoutManager = GridLayoutManager(requireContext(), 2)
+        binding.rvCategories.adapter = HomeCategoryAdapter(categories) { item, _ ->
+            viewModel.selectCategory(item.categoryType)
+        }
+
+        adapter = HomeTodaysTaskAdapter(
+            onItemClick = { task ->
+                val action = HomeFragmentDirections.actionHomeToEditTask(task.id)
+                findNavController().navigate(action)
+            },
+            onCheckboxChange = { task, isChecked ->
+                viewModel.toggleTaskStatus(task.id, isChecked)
+            }
+        )
+
+        binding.rvTasks.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvTasks.adapter = adapter
+    }
+
+    private fun setupObservers() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.homeState.collect { state ->
+                    when (state) {
+                        is HomeState.Empty -> {
+                            binding.rvTasks.visibility = View.GONE
+                            binding.llNoTasks.visibility = View.VISIBLE
+                        }
+
+                        is HomeState.Loading -> {
+                            binding.rvTasks.visibility = View.GONE
+                            binding.llNoTasks.visibility = View.GONE
+                        }
+
+                        is HomeState.Success -> {
+                            binding.rvTasks.visibility = View.VISIBLE
+                            binding.llNoTasks.visibility = View.GONE
+                            adapter.submitList(state.tasks)
+                        }
+
+                        is HomeState.Error -> {
+                            binding.llNoTasks.visibility = View.GONE
+                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -84,5 +104,4 @@ class HomeFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
-
 }

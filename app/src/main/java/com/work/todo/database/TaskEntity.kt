@@ -8,11 +8,11 @@ data class TaskEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val title: String,
+    val notes: String? = null,
     val category: TaskCategory,
-    val date: String,
-    val time: String,
+    val date: String? = null,
+    val time: String? = null,
     val reminder: Boolean = false,
-    val notes: String,
     val isDone: Boolean = false
 )
 

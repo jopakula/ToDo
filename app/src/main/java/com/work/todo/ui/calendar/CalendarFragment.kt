@@ -4,44 +4,77 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.work.todo.R
 import com.work.todo.databinding.FragmentCalendarBinding
+import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class CalendarFragment : Fragment(R.layout.fragment_calendar) {
 
     private var _binding: FragmentCalendarBinding? = null
     private val binding get() = _binding!!
 
+    private val viewModel: CalendarViewModel by viewModel()
+    private lateinit var calendarAdapter: CalendarTaskAdapter
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentCalendarBinding.bind(view)
 
-        val calendarTasks = listOf(
-            CalendarTaskItem(1, "16/09/2023", "07:30 AM", "Wake up and morning routine"),
-            CalendarTaskItem(2, "16/09/2023", "08:00 AM", "Breakfast"),
-            CalendarTaskItem(3, "16/09/2023", "09:00 AM", "Team meeting"),
-            CalendarTaskItem(17, "17/09/2023", "01:00 PM", "Lunch with colleague"),
-            CalendarTaskItem(18, "17/09/2023", "02:30 PM", "Code review"),
-            CalendarTaskItem(28, "18/09/2023", "04:30 PM", "Performance review"),
-            CalendarTaskItem(29, "18/09/2023", "06:15 PM", "Tennis practice"),
-            CalendarTaskItem(30, "18/09/2023", "08:00 PM", "Gym Session"),
-            CalendarTaskItem(31, "18/09/2023", "09:30 PM", "Evening walk"),
-            CalendarTaskItem(36, "19/09/2023", "01:15 PM", "Lunch")
-        )
+        setupRecyclerView()
+        setupCalendar()
+        observeState()
+    }
 
-
-        val calendarAdapter = CalendarTaskAdapter(calendarTasks) { task, position ->
-            Toast.makeText(context, "Удаляем: ${task.title} элемент №$position", Toast.LENGTH_SHORT)
-                .show()
+    private fun setupRecyclerView() {
+        calendarAdapter = CalendarTaskAdapter { task ->
+            viewModel.deleteTask(task.id)
         }
 
-        binding.rvCalendarTasks.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvCalendarTasks.adapter = calendarAdapter
+        binding.rvCalendarTasks.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = calendarAdapter
+        }
+    }
 
+    private fun setupCalendar() {
         binding.calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
-            val selectedDate = "$dayOfMonth/${month + 1}/$year"
-            Toast.makeText(context, "Выбрано: $selectedDate", Toast.LENGTH_SHORT).show()
+            viewModel.selectDate(year, month, dayOfMonth)
+        }
+    }
+
+    private fun observeState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.calendarState.collect { state ->
+                    when (state) {
+                        is CalendarState.Loading -> {
+                            binding.rvCalendarTasks.visibility = View.GONE
+                            calendarAdapter.submitList(emptyList())
+                        }
+
+                        is CalendarState.Success -> {
+                            binding.rvCalendarTasks.visibility = View.VISIBLE
+                            calendarAdapter.submitList(state.tasks)
+                        }
+
+                        is CalendarState.Empty -> {
+                            binding.rvCalendarTasks.visibility = View.GONE
+                            calendarAdapter.submitList(emptyList())
+                        }
+
+                        is CalendarState.Error -> {
+                            binding.rvCalendarTasks.visibility = View.GONE
+                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+                }
+            }
         }
     }
 
