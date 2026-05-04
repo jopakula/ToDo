@@ -1,10 +1,21 @@
 package com.work.todo.ui.main
 
+import android.Manifest
 import android.animation.Animator
+import android.app.AlarmManager
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
+import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.get
 import androidx.core.view.size
 import androidx.navigation.fragment.NavHostFragment
@@ -22,6 +33,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        checkNotificationPermissions()
+        checkExactAlarmPermission()
 
         binding.lottieContainer.isClickable = true
         binding.lottieContainer.isFocusable = true
@@ -97,6 +111,37 @@ class MainActivity : AppCompatActivity() {
                 finish()
             } else {
                 navController.navigateUp()
+            }
+        }
+    }
+
+    private fun checkNotificationPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    101
+                )
+            }
+        }
+    }
+
+    private fun checkExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                    data = Uri.fromParts("package", packageName, null)
+                }
+                startActivity(intent)
+                Toast.makeText(
+                    this,
+                    "Разрешите приложению ставить точные будильники",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }

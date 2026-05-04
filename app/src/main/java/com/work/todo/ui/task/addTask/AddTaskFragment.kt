@@ -18,6 +18,7 @@ import androidx.navigation.fragment.findNavController
 import com.work.todo.database.TaskCategory
 import com.work.todo.databinding.FragmentAddTaskBinding
 import com.work.todo.databinding.ItemCategoryDropdownBinding
+import com.work.todo.notifications.ReminderManager
 import com.work.todo.ui.home.category.CategoryItem
 import com.work.todo.ui.mapper.CategoryMapper
 import com.work.todo.ui.task.TaskState
@@ -32,6 +33,8 @@ class AddTaskFragment : Fragment() {
 
     private var _binding: FragmentAddTaskBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var reminderManager: ReminderManager
 
     private var selectedCategory: TaskCategory = TaskCategory.WORK
     private var isMenuExpanded = false
@@ -57,6 +60,8 @@ class AddTaskFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        reminderManager = ReminderManager(requireContext())
+
         setupStateObserver()
         setupListeners()
         setupFab()
@@ -65,29 +70,45 @@ class AddTaskFragment : Fragment() {
     private fun setupStateObserver() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.state.collect { state ->
-                    when (state) {
-                        is TaskState.Idle -> {}
-                        is TaskState.Loading -> {
-                            binding.fab.isEnabled = false
-                        }
 
-                        is TaskState.Success -> {
-                            Toast.makeText(
-                                requireContext(),
-                                "Задача сохранена!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            findNavController().popBackStack()
-                        }
+                launch {
+                    viewModel.state.collect { state ->
+                        when (state) {
+                            is TaskState.Idle -> {}
+                            is TaskState.Loading -> {
+                                binding.fab.isEnabled = false
+                            }
 
-                        is TaskState.Error -> {
-                            binding.fab.isEnabled = true
-                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT)
-                                .show()
+                            is TaskState.Success -> {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Задача сохранена!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                findNavController().popBackStack()
+                            }
+
+                            is TaskState.Error -> {
+                                binding.fab.isEnabled = true
+                                Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT)
+                                    .show()
+                            }
                         }
                     }
                 }
+
+                launch {
+                    viewModel.scheduleReminderEvent.collect { (taskId, timeInMillis) ->
+                        val taskTitle = binding.etTaskName.text.toString().trim()
+
+                        reminderManager.setReminder(
+                            taskId = taskId,
+                            title = taskTitle,
+                            triggerTimeMs = timeInMillis
+                        )
+                    }
+                }
+
             }
         }
     }

@@ -1,4 +1,4 @@
-package com.work.todo.ui.viewModels
+package com.work.todo.ui
 
 import com.work.todo.ui.allTasks.AllTasksViewModel
 import com.work.todo.ui.calendar.CalendarViewModel

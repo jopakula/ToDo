@@ -19,6 +19,7 @@ import androidx.navigation.fragment.navArgs
 import com.work.todo.database.TaskCategory
 import com.work.todo.databinding.FragmentEditTaskBinding
 import com.work.todo.databinding.ItemCategoryDropdownBinding
+import com.work.todo.notifications.ReminderManager
 import com.work.todo.ui.mapper.CategoryMapper
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -31,6 +32,8 @@ class EditTaskFragment : Fragment() {
 
     private var _binding: FragmentEditTaskBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var reminderManager: ReminderManager
 
     private val args: EditTaskFragmentArgs by navArgs()
     private val viewModel: EditTaskViewModel by viewModel()
@@ -57,6 +60,8 @@ class EditTaskFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        reminderManager = ReminderManager(requireContext())
+
         viewModel.loadTask(args.taskId)
 
         setupObservers()
@@ -67,35 +72,52 @@ class EditTaskFragment : Fragment() {
     private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.taskState.collect { task ->
-                    task?.let { entity ->
-                        binding.etTaskName.setText(entity.title)
-                        binding.etNotes.setText(entity.notes)
-                        selectedCategory = entity.category
-                        binding.tvSelectedCategory.text = entity.category.name.lowercase()
-                            .replaceFirstChar { it.uppercase() }
+                launch {
+                    viewModel.taskState.collect { task ->
+                        task?.let { entity ->
+                            binding.etTaskName.setText(entity.title)
+                            binding.etNotes.setText(entity.notes)
+                            selectedCategory = entity.category
+                            binding.tvSelectedCategory.text = entity.category.name.lowercase()
+                                .replaceFirstChar { it.uppercase() }
 
-                        entity.date?.let { dateStr ->
-                            val date = dbDateFormatter.parse(dateStr)
-                            date?.let {
-                                selectedDateMillis = it.time
-                                binding.tvSetDate.text = dateFormatter.format(it)
-                                binding.tvSetDate.setTextColor(Color.BLACK)
-                                binding.ivDateIcon.setColorFilter(Color.parseColor("#FFC107"))
+                            entity.date?.let { dateStr ->
+                                val date = dbDateFormatter.parse(dateStr)
+                                date?.let {
+                                    selectedDateMillis = it.time
+                                    binding.tvSetDate.text = dateFormatter.format(it)
+                                    binding.tvSetDate.setTextColor(Color.BLACK)
+                                    binding.ivDateIcon.setColorFilter(Color.parseColor("#FFC107"))
+                                }
                             }
-                        }
 
-                        entity.time?.let { timeStr ->
-                            val time = timeFormatter.parse(timeStr)
-                            time?.let {
-                                selectedTimeMillis = it.time
-                                binding.tvSetTime.text = timeFormatter.format(it)
-                                binding.tvSetTime.setTextColor(Color.BLACK)
-                                binding.ivTimeIcon.setColorFilter(Color.parseColor("#FF5722"))
+                            entity.time?.let { timeStr ->
+                                val time = timeFormatter.parse(timeStr)
+                                time?.let {
+                                    selectedTimeMillis = it.time
+                                    binding.tvSetTime.text = timeFormatter.format(it)
+                                    binding.tvSetTime.setTextColor(Color.BLACK)
+                                    binding.ivTimeIcon.setColorFilter(Color.parseColor("#FF5722"))
+                                }
                             }
-                        }
 
-                        isReminderActivated = entity.reminder
+                            isReminderActivated = entity.reminder
+                            applyReminderUi(isReminderActivated)
+                        }
+                    }
+                }
+                launch {
+                    viewModel.scheduleReminderEvent.collect { (taskId, timeInMillis) ->
+                        reminderManager.setReminder(
+                            taskId = taskId,
+                            title = binding.etTaskName.text.toString(),
+                            triggerTimeMs = timeInMillis
+                        )
+                    }
+                }
+                launch {
+                    viewModel.cancelReminderEvent.collect { taskId ->
+                        reminderManager.cancelReminder(taskId)
                     }
                 }
             }
@@ -116,13 +138,17 @@ class EditTaskFragment : Fragment() {
 
     private fun updateReminderUi() {
         isReminderActivated = !isReminderActivated
+        applyReminderUi(isReminderActivated)
+    }
+
+    private fun applyReminderUi(isActive: Boolean) {
         val tvReminder = binding.tvSetReminder
-        if (isReminderActivated) {
-            binding.ivReminderIcon.setColorFilter(Color.parseColor("#4A90E2"))
+        if (isActive) {
+            binding.ivReminderIcon.setColorFilter(Color.parseColor("#4A90E2")) // Синий
             tvReminder.text = "Reminder Enabled"
             tvReminder.setTextColor(Color.BLACK)
         } else {
-            binding.ivReminderIcon.setColorFilter(Color.parseColor("#8E8E8E"))
+            binding.ivReminderIcon.setColorFilter(Color.parseColor("#8E8E8E")) // Серый
             tvReminder.text = "Set Reminder"
             tvReminder.setTextColor(Color.GRAY)
         }
