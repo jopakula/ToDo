@@ -6,8 +6,8 @@
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="6dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="3dp"
-    app:cardBackgroundColor="#EDF5FB">
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="?attr/appTaskCardInnerColor">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -18,6 +18,7 @@
             android:id="@+id/itemCheckbox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:buttonTint="?attr/colorPrimary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -28,8 +29,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginEnd="12dp"
+            android:textColor="?attr/appTextPrimary"
             android:text="Finish Report"
-            android:textColor="#333333"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -41,8 +42,8 @@
             android:id="@+id/tvTaskTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="?attr/colorPrimary"
             android:text="10:00 am"
-            android:textColor="#4A90E2"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

@@ -1,20 +1,22 @@
 package com.work.todo.ui.allTasks
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.work.todo.R
 import com.work.todo.databinding.FragmentAllTasksBinding
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class AllTasksFragment : Fragment(R.layout.fragment_all_tasks) {
+class AllTasksFragment : Fragment() {
 
     private var _binding: FragmentAllTasksBinding? = null
     private val binding get() = _binding!!
@@ -23,12 +25,24 @@ class AllTasksFragment : Fragment(R.layout.fragment_all_tasks) {
     private lateinit var overdueAdapter: AllTasksAdapter
     private lateinit var regularAdapter: AllTasksAdapter
 
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentAllTasksBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentAllTasksBinding.bind(view)
 
         setupAdapters()
         observeViewModel()
+
+        binding.etSearchAll.doOnTextChanged { text, _, _, _ ->
+            viewModel.setSearchQuery(text.toString())
+        }
 
         binding.tvBack.setOnClickListener { findNavController().popBackStack() }
     }
@@ -60,6 +74,11 @@ class AllTasksFragment : Fragment(R.layout.fragment_all_tasks) {
                         is AllTasksState.Success -> {
                             overdueAdapter.submitList(state.overdueTasks)
                             regularAdapter.submitList(state.regularTasks)
+
+                            binding.tvOverdueLabel.visibility =
+                                if (state.overdueTasks.isEmpty()) View.GONE else View.VISIBLE
+                            binding.tvAllTasksLabel.visibility =
+                                if (state.regularTasks.isEmpty()) View.GONE else View.VISIBLE
                         }
 
                         is AllTasksState.Empty -> {

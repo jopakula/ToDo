@@ -5,6 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/appBackgroundColor"
     tools:context=".ui.main.MainActivity">
 
     <androidx.fragment.app.FragmentContainerView
@@ -22,8 +23,10 @@
         android:layout_gravity="bottom"
         app:fabAlignmentMode="center"
         app:fabAnchorMode="cradle"
-        app:fabCradleRoundedCornerRadius="10dp"
-        app:fabCradleVerticalOffset="14dp">
+        app:backgroundTint="?attr/appSurfaceColor"
+        app:fabCradleMargin="8dp"
+        app:fabCradleRoundedCornerRadius="16dp"
+        app:fabCradleVerticalOffset="12dp">
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigationView"
@@ -31,6 +34,10 @@
             android:layout_height="match_parent"
             android:layout_marginEnd="16dp"
             android:background="@android:color/transparent"
+            app:elevation="0dp"
+            app:itemIconTint="@color/bnv_tab_item_color"
+            app:itemTextColor="@color/bnv_tab_item_color"
+            app:labelVisibilityMode="unlabeled"
             app:menu="@menu/bottom_nav_menu" />
 
     </com.google.android.material.bottomappbar.BottomAppBar>
@@ -40,13 +47,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_add_task"
-        app:layout_anchor="@id/bottomAppBar" />
+        app:backgroundTint="?attr/colorPrimary"
+        app:tint="@android:color/white"
+        app:layout_anchor="@id/bottomAppBar"
+        app:maxImageSize="32dp" />
 
     <FrameLayout
         android:id="@+id/lottie_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
+        android:background="?attr/appBackgroundColor"
         android:elevation="10dp">
 
         <com.airbnb.lottie.LottieAnimationView

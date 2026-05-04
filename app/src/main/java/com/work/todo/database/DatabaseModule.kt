@@ -13,7 +13,6 @@ val databaseModule = module {
             TaskDatabase::class.java,
             TaskDatabase.DATABASE_NAME
         )
-            .fallbackToDestructiveMigration()
             .build()
     }
 

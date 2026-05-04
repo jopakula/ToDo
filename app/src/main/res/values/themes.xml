@@ -1,10 +1,16 @@
 <resources>
-    <!-- Base application theme. -->
     <style name="Base.Theme.ToDo" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-    </style>
 
-    <style name="Theme.ToDo" parent="Base.Theme.ToDo" />
+        <item name="appBackgroundColor">@color/bg_app</item>
+        <item name="appSurfaceColor">@color/surface_app</item>
+        <item name="colorPrimary">@color/primary_blue</item>
+        <item name="appTextPrimary">@color/text_main</item>
+        <item name="appTextSecondary">@color/text_secondary</item>
+        <item name="appTaskCardInnerColor">@color/card_sub_bg</item>
+
+        <item name="android:statusBarColor">?attr/appBackgroundColor</item>
+        <item name="android:navigationBarColor">?attr/appSurfaceColor</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
 </resources>

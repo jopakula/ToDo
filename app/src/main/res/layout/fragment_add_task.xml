@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:background="?attr/appBackgroundColor">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clHeader"
@@ -16,8 +16,8 @@
             android:id="@+id/tvAddTaskTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="?attr/colorPrimary"
             android:text="Add task"
-            android:textColor="#4A90E2"
             android:textSize="22sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:text="Cancel"
-            android:textColor="#FF8A65"
+            android:textColor="@color/cancel_orange"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="@id/tvAddTaskTitle"
             app:layout_constraintEnd_toEndOf="parent"
@@ -57,6 +57,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
                 android:background="@drawable/bg_search_input_home"
+                android:textColor="?attr/appTextPrimary"
+                android:textColorHint="?attr/appTextSecondary"
                 android:hint="Finish Report"
                 android:paddingHorizontal="15dp" />
 
@@ -85,6 +87,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:text="Work"
+                        android:textColor="?attr/appTextPrimary"
                         android:textSize="16sp" />
 
                     <ImageView
@@ -93,7 +96,7 @@
                         android:layout_height="24dp"
                         android:layout_gravity="center_vertical|end"
                         android:src="@drawable/ic_arrow_bottom"
-                        app:tint="#4A90E2" />
+                        app:tint="?attr/colorPrimary" />
                 </FrameLayout>
 
                 <LinearLayout
@@ -112,6 +115,7 @@
             <LinearLayout
                 android:id="@+id/llSetDate"
                 style="@style/IconTextStyle"
+                android:paddingHorizontal="16dp"
                 android:orientation="horizontal">
 
                 <ImageView
@@ -119,7 +123,7 @@
                     android:layout_width="22dp"
                     android:layout_height="22dp"
                     android:src="@drawable/ic_calendar_new"
-                    app:tint="#8E8E8E" />
+                    app:tint="?attr/appTextSecondary" />
 
                 <TextView
                     android:id="@+id/tvSetDate"
@@ -127,12 +131,13 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:text="Set due date"
-                    android:textColor="#8E8E8E" />
+                    android:textColor="?attr/appTextSecondary" />
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/llSetTime"
                 style="@style/IconTextStyle"
+                android:paddingHorizontal="16dp"
                 android:layout_marginTop="10dp"
                 android:orientation="horizontal">
 
@@ -141,7 +146,7 @@
                     android:layout_width="22dp"
                     android:layout_height="22dp"
                     android:src="@drawable/ic_time"
-                    app:tint="#8E8E8E" />
+                    app:tint="?attr/appTextSecondary" />
 
                 <TextView
                     android:id="@+id/tvSetTime"
@@ -149,8 +154,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:text="Set Time"
-                    android:textColor="#8E8E8E" />
-
+                    android:textColor="?attr/appTextSecondary" />
             </LinearLayout>
 
             <TextView
@@ -160,6 +164,7 @@
             <LinearLayout
                 android:id="@+id/llSetReminder"
                 style="@style/IconTextStyle"
+                android:paddingHorizontal="16dp"
                 android:orientation="horizontal">
 
                 <ImageView
@@ -167,7 +172,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="22dp"
                     android:src="@drawable/ic_reminder"
-                    app:tint="#8E8E8E" />
+                    app:tint="?attr/appTextSecondary" />
 
                 <TextView
                     android:id="@+id/tvSetReminder"
@@ -175,7 +180,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:text="Set Reminder"
-                    android:textColor="#8E8E8E" />
+                    android:textColor="?attr/appTextSecondary" />
             </LinearLayout>
 
             <TextView
@@ -187,6 +192,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="150dp"
                 android:background="@drawable/bg_search_input_home"
+                android:textColor="?attr/appTextPrimary"
+                android:textColorHint="?attr/appTextSecondary"
                 android:gravity="top"
                 android:hint="Make sure to research from internet"
                 android:padding="15dp" />
@@ -202,9 +209,9 @@
         android:layout_marginBottom="100dp"
         android:src="@drawable/ic_ok"
         android:visibility="invisible"
-        app:backgroundTint="#4A90E2"
+        app:backgroundTint="?attr/colorPrimary"
+        app:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:tint="@android:color/white" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

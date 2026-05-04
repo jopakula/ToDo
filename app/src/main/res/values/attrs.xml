@@ -1,0 +1,7 @@
+<resources>
+    <attr name="appBackgroundColor" format="color" />
+    <attr name="appSurfaceColor" format="color" />
+    <attr name="appTaskCardInnerColor" format="color" />
+    <attr name="appTextPrimary" format="color" />
+    <attr name="appTextSecondary" format="color" />
+</resources>

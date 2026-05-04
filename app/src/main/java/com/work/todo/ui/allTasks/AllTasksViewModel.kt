@@ -5,29 +5,41 @@ import androidx.lifecycle.viewModelScope
 import com.work.todo.database.TaskDao
 import com.work.todo.ui.mapper.AllTasksMapper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class AllTasksViewModel(private val taskDao: TaskDao) : ViewModel() {
 
-    val uiState: StateFlow<AllTasksState> = taskDao.getFlowAllTasks()
-        .map { entities ->
-            val allItems = AllTasksMapper.mapToUiList(entities)
+    private val _searchQuery = MutableStateFlow("")
 
-            if (allItems.isEmpty()) {
-                AllTasksState.Empty
-            } else {
-                AllTasksState.Success(
-                    overdueTasks = allItems.filter { it.isOverdue },
-                    regularTasks = allItems.filter { !it.isOverdue }
-                )
-            }
+    val uiState: StateFlow<AllTasksState> = combine(
+        taskDao.getFlowAllTasks(),
+        _searchQuery
+    ) { entities, query ->
+
+        val allItems = AllTasksMapper.mapToUiList(entities)
+
+        val filteredItems = if (query.isEmpty()) {
+            allItems
+        } else {
+            allItems.filter { it.title.contains(query, ignoreCase = true) }
         }
+
+        if (filteredItems.isEmpty()) {
+            AllTasksState.Empty
+        } else {
+            AllTasksState.Success(
+                overdueTasks = filteredItems.filter { it.isOverdue },
+                regularTasks = filteredItems.filter { !it.isOverdue }
+            )
+        }
+    }
         .onStart { emit(AllTasksState.Loading) }
         .catch { e -> emit(AllTasksState.Error(e.message ?: "Error")) }
         .stateIn(
@@ -35,6 +47,10 @@ class AllTasksViewModel(private val taskDao: TaskDao) : ViewModel() {
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = AllTasksState.Loading
         )
+
+    fun setSearchQuery(text: String) {
+        _searchQuery.value = text
+    }
 
     fun toggleTaskStatus(id: Int, isDone: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
