@@ -18,4 +18,8 @@
     <color name="cancel_orange">#FFAB91</color>
     <color name="overdue_orange">#FF8A65</color>
 
+    <color name="icon_placeholder">#78909C</color>
+    <color name="date_accent_yellow">#FFE082</color>
+    <color name="time_accent_orange">#FFCC80</color>
+
 </resources>

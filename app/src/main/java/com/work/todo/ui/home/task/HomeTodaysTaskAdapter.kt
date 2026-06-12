@@ -40,7 +40,7 @@ class HomeTodaysTaskAdapter(
         ) {
             with(binding) {
                 tvTaskTitle.text = task.title
-                tvTaskTime.text = task.time
+                tvTaskTime.text = task.time.asString(root.context)
 
                 itemCheckbox.setOnCheckedChangeListener(null)
                 itemCheckbox.isChecked = task.isDone

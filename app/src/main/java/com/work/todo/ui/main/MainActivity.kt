@@ -29,6 +29,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
+    private companion object {
+        const val NOTIFICATION_PERMISSION_CODE = 101
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -123,7 +127,7 @@ class MainActivity : AppCompatActivity() {
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    101
+                    NOTIFICATION_PERMISSION_CODE
                 )
             }
         }
@@ -139,7 +143,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
                 Toast.makeText(
                     this,
-                    "Разрешите приложению ставить точные будильники",
+                    getString(R.string.msg_exact_alarm_permission_required),
                     Toast.LENGTH_LONG
                 ).show()
             }

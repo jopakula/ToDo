@@ -40,8 +40,8 @@ class CalendarTaskAdapter(
 
         fun bind(item: CalendarTaskItem, onDelete: (CalendarTaskItem) -> Unit) {
             with(binding) {
-                tvDate.text = item.date
-                tvTime.text = item.time
+                tvDate.text = item.date.asString(root.context)
+                tvTime.text = item.time.asString(root.context)
                 tvTitle.text = item.title
                 tvDelete.setOnClickListener { onDelete(item) }
             }

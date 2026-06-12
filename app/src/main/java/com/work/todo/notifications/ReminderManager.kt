@@ -9,10 +9,15 @@ import android.os.Build
 class ReminderManager(private val context: Context) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
+    companion object {
+        const val EXTRA_TASK_ID = "EXTRA_TASK_ID"
+        const val EXTRA_TASK_TITLE = "EXTRA_TASK_TITLE"
+    }
+
     fun setReminder(taskId: Int, title: String, triggerTimeMs: Long) {
         val intent = Intent(context, TaskReminderReceiver::class.java).apply {
-            putExtra("TASK_ID", taskId)
-            putExtra("TASK_TITLE", title)
+            putExtra(EXTRA_TASK_ID, taskId)
+            putExtra(EXTRA_TASK_TITLE, title)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(

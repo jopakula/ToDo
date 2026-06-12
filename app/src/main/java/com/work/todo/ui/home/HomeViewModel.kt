@@ -2,9 +2,11 @@ package com.work.todo.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.work.todo.R
 import com.work.todo.data.utils.TaskDateTimeUtils
 import com.work.todo.domain.TaskCategory
 import com.work.todo.domain.TaskRepository
+import com.work.todo.ui.UiText
 import com.work.todo.ui.home.task.HomeTasksState
 import com.work.todo.ui.home.task.HomeUiState
 import com.work.todo.ui.mapper.CategoryMapper
@@ -25,14 +27,12 @@ class HomeViewModel(
 ) : ViewModel() {
 
     private val _selectedCategory = MutableStateFlow<TaskCategory?>(null)
-
     private val todayDate = TaskDateTimeUtils.getCurrentDbDate()
 
     val uiState: StateFlow<HomeUiState> = combine(
         taskRepository.getFlowTasksByDate(todayDate),
         _selectedCategory
     ) { tasks, selectedCat ->
-
         val filteredTasks =
             if (selectedCat == null) tasks else tasks.filter { it.category == selectedCat }
         val uiTasks = TaskMapper.mapToUiList(filteredTasks)
@@ -50,7 +50,9 @@ class HomeViewModel(
             emit(HomeUiState(tasksState = HomeTasksState.Loading))
         }
         .catch { e ->
-            emit(HomeUiState(tasksState = HomeTasksState.Error(e.message ?: "Unknown Error")))
+            val errorText = e.message?.let { UiText.DynamicString(it) }
+                ?: UiText.ResourceString(R.string.error_unknown)
+            emit(HomeUiState(tasksState = HomeTasksState.Error(errorText)))
         }
         .stateIn(
             scope = viewModelScope,

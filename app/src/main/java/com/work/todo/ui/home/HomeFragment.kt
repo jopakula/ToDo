@@ -12,6 +12,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.work.todo.R
 import com.work.todo.databinding.FragmentHomeBinding
 import com.work.todo.ui.home.category.HomeCategoryAdapter
@@ -56,6 +57,8 @@ class HomeFragment : Fragment() {
         binding.rvCategories.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.rvCategories.adapter = categoriesAdapter
 
+        (binding.rvCategories.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+
         tasksAdapter = HomeTodaysTaskAdapter(
             onItemClick = { task ->
                 val action = HomeFragmentDirections.actionHomeToEditTask(task.id)
@@ -97,7 +100,7 @@ class HomeFragment : Fragment() {
                             binding.llNoTasks.visibility = View.GONE
                             Toast.makeText(
                                 requireContext(),
-                                state.tasksState.message,
+                                state.tasksState.message.asString(requireContext()),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }

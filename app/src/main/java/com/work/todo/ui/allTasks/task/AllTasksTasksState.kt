@@ -1,5 +1,7 @@
 package com.work.todo.ui.allTasks.task
 
+import com.work.todo.ui.UiText
+
 sealed class AllTasksTasksState {
     object Loading : AllTasksTasksState()
     object Empty : AllTasksTasksState()
@@ -8,5 +10,5 @@ sealed class AllTasksTasksState {
         val regularTasks: List<AllTasksItem>
     ) : AllTasksTasksState()
 
-    data class Error(val message: String) : AllTasksTasksState()
+    data class Error(val message: UiText) : AllTasksTasksState()
 }

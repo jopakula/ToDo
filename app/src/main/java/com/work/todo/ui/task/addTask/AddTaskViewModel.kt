@@ -2,12 +2,15 @@ package com.work.todo.ui.task.addTask
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.work.todo.R
 import com.work.todo.data.utils.TaskDateTimeUtils
 import com.work.todo.domain.Task
 import com.work.todo.domain.TaskCategory
 import com.work.todo.domain.TaskRepository
+import com.work.todo.ui.UiText
 import com.work.todo.ui.home.category.CategoryItem
 import com.work.todo.ui.mapper.CategoryMapper
+import com.work.todo.ui.task.TaskUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,8 +26,8 @@ class AddTaskViewModel(
     private val taskRepository: TaskRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AddTaskUiState())
-    val uiState: StateFlow<AddTaskUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(TaskUiState())
+    val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
 
     private val _scheduleReminderEvent = MutableSharedFlow<Pair<Int, Long>>()
     val scheduleReminderEvent: SharedFlow<Pair<Int, Long>> = _scheduleReminderEvent.asSharedFlow()
@@ -57,28 +60,18 @@ class AddTaskViewModel(
 
     fun onDateSelected(year: Int, month: Int, day: Int) {
         val (uiDate, dbDate) = TaskDateTimeUtils.getFormattedDatePair(year, month, day)
-        _uiState.update {
-            it.copy(
-                formattedDate = uiDate,
-                rawDate = dbDate
-            )
-        }
+        _uiState.update { it.copy(formattedDate = uiDate, rawDate = dbDate) }
     }
 
     fun onTimeSelected(hour: Int, minute: Int) {
         val formattedTime = TaskDateTimeUtils.getFormattedTime(hour, minute)
-        _uiState.update {
-            it.copy(
-                formattedTime = formattedTime,
-                rawTime = formattedTime
-            )
-        }
+        _uiState.update { it.copy(formattedTime = formattedTime, rawTime = formattedTime) }
     }
 
     fun saveTask() {
         val currentState = _uiState.value
         if (currentState.title.isBlank()) {
-            _uiState.update { it.copy(error = "Введите название задачи") }
+            _uiState.update { it.copy(error = UiText.ResourceString(R.string.error_empty_title)) }
             return
         }
 
@@ -114,7 +107,12 @@ class AddTaskViewModel(
                 }
                 _uiState.update { it.copy(isLoading = false, isSaved = true) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message ?: "Unknown Error") }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = UiText.ResourceString(R.string.error_unknown)
+                    )
+                }
             }
         }
     }

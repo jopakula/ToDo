@@ -13,8 +13,9 @@ import com.work.todo.ui.main.MainActivity
 
 class TaskReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val taskId = intent.getIntExtra("TASK_ID", 0)
-        val taskTitle = intent.getStringExtra("TASK_TITLE") ?: "Напоминание о задаче"
+        val taskId = intent.getIntExtra(ReminderManager.EXTRA_TASK_ID, 0)
+        val defaultTitle = context.getString(R.string.reminder_default_title)
+        val taskTitle = intent.getStringExtra(ReminderManager.EXTRA_TASK_TITLE) ?: defaultTitle
 
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -22,7 +23,9 @@ class TaskReminderReceiver : BroadcastReceiver() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                channelId, "Напоминания", NotificationManager.IMPORTANCE_HIGH
+                channelId,
+                context.getString(R.string.notification_channel_name),
+                NotificationManager.IMPORTANCE_HIGH
             )
             notificationManager.createNotificationChannel(channel)
         }
@@ -34,7 +37,7 @@ class TaskReminderReceiver : BroadcastReceiver() {
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_reminder)
-            .setContentTitle("Пора за работу!")
+            .setContentTitle(context.getString(R.string.notification_default_content))
             .setContentText(taskTitle)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)

@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Base.Theme.ToDo" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
 
@@ -11,6 +11,10 @@
 
         <item name="android:statusBarColor">?attr/appBackgroundColor</item>
         <item name="android:navigationBarColor">?attr/appSurfaceColor</item>
+    </style>
+
+    <style name="Theme.ToDo" parent="Base.Theme.ToDo">
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
     </style>
 </resources>

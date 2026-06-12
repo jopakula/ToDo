@@ -2,8 +2,10 @@ package com.work.todo.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.work.todo.R
 import com.work.todo.data.utils.TaskDateTimeUtils
 import com.work.todo.domain.TaskRepository
+import com.work.todo.ui.UiText
 import com.work.todo.ui.calendar.task.CalendarTasksState
 import com.work.todo.ui.calendar.task.CalendarUiState
 import com.work.todo.ui.mapper.CalendarMapper
@@ -41,13 +43,9 @@ class CalendarViewModel(
             emit(CalendarUiState(tasksState = CalendarTasksState.Loading))
         }
         .catch { e ->
-            emit(
-                CalendarUiState(
-                    tasksState = CalendarTasksState.Error(
-                        e.message ?: "Unknown Error"
-                    )
-                )
-            )
+            val errorText = e.message?.let { UiText.DynamicString(it) }
+                ?: UiText.ResourceString(R.string.error_unknown)
+            emit(CalendarUiState(tasksState = CalendarTasksState.Error(errorText)))
         }
         .stateIn(
             scope = viewModelScope,

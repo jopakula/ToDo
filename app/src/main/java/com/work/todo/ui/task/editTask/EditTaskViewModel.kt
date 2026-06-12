@@ -2,12 +2,15 @@ package com.work.todo.ui.task.editTask
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.work.todo.R
 import com.work.todo.data.utils.TaskDateTimeUtils
 import com.work.todo.domain.Task
 import com.work.todo.domain.TaskCategory
 import com.work.todo.domain.TaskRepository
+import com.work.todo.ui.UiText
 import com.work.todo.ui.home.category.CategoryItem
 import com.work.todo.ui.mapper.CategoryMapper
+import com.work.todo.ui.task.TaskUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,8 +26,8 @@ class EditTaskViewModel(
     private val taskRepository: TaskRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(EditTaskUiState())
-    val uiState: StateFlow<EditTaskUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(TaskUiState())
+    val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
 
     private val _scheduleReminderEvent = MutableSharedFlow<Pair<Int, Long>>()
     val scheduleReminderEvent: SharedFlow<Pair<Int, Long>> = _scheduleReminderEvent.asSharedFlow()
@@ -54,7 +57,7 @@ class EditTaskViewModel(
                         notes = task.notes.orEmpty(),
                         selectedCategory = uiCategory,
                         formattedDate = TaskDateTimeUtils.formatDbDateToUi(task.date),
-                        formattedTime = task.time ?: "Set Time",
+                        formattedTime = task.time,
                         isReminderEnabled = task.reminder,
                         rawDate = task.date,
                         rawTime = task.time,
@@ -62,7 +65,12 @@ class EditTaskViewModel(
                     )
                 }
             } else {
-                _uiState.update { it.copy(isLoading = false, error = "Задача не найдена") }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = UiText.ResourceString(R.string.error_task_not_found)
+                    )
+                }
             }
         }
     }
@@ -102,7 +110,7 @@ class EditTaskViewModel(
         val currentState = _uiState.value
 
         if (currentState.title.isBlank()) {
-            _uiState.update { it.copy(error = "Введите название задачи") }
+            _uiState.update { it.copy(error = UiText.ResourceString(R.string.error_empty_title)) }
             return
         }
 
@@ -137,7 +145,12 @@ class EditTaskViewModel(
 
                 _uiState.update { it.copy(isLoading = false, isSaved = true) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message ?: "Unknown Error") }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = UiText.ResourceString(R.string.error_unknown)
+                    )
+                }
             }
         }
     }

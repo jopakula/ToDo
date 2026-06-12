@@ -2,7 +2,7 @@ package com.work.todo.ui.task.editTask
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.graphics.Color
+import android.graphics.PorterDuff
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,10 +17,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.work.todo.R
 import com.work.todo.databinding.FragmentEditTaskBinding
 import com.work.todo.databinding.ItemCategoryDropdownBinding
 import com.work.todo.notifications.ReminderManager
 import com.work.todo.ui.mapper.CategoryMapper
+import com.work.todo.ui.task.TaskUiState
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.Calendar
@@ -82,17 +84,22 @@ class EditTaskFragment : Fragment() {
         }
     }
 
-    private fun renderUiState(state: EditTaskUiState) {
+    private fun renderUiState(state: TaskUiState) {
         binding.fab.isEnabled = !state.isLoading
 
         if (state.isSaved) {
-            Toast.makeText(requireContext(), "Изменения сохранены", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.msg_changes_saved),
+                Toast.LENGTH_SHORT
+            ).show()
             findNavController().popBackStack()
             return
         }
 
         state.error?.let {
-            Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), it.asString(requireContext()), Toast.LENGTH_SHORT)
+                .show()
         }
 
         if (binding.etTaskName.text.toString() != state.title) {
@@ -103,42 +110,65 @@ class EditTaskFragment : Fragment() {
         }
 
         state.selectedCategory?.let {
-            binding.tvSelectedCategory.text = it.title
+            binding.tvSelectedCategory.text = it.title.asString(requireContext())
         }
 
         binding.llCategoryOptions.visibility =
             if (state.isCategoryMenuExpanded) View.VISIBLE else View.GONE
         binding.ivCategoryArrow.animate().rotation(if (state.isCategoryMenuExpanded) 180f else 0f)
             .start()
+
         if (state.isCategoryMenuExpanded) {
             renderCategoryMenu()
         }
 
-        binding.tvSetDate.text = state.formattedDate
-        binding.tvSetTime.text = state.formattedTime
+        val context = requireContext()
 
-        binding.tvSetDate.setTextColor(if (state.formattedDate == "Set Date") Color.GRAY else Color.BLACK)
-        binding.ivDateIcon.setColorFilter(
-            if (state.formattedDate == "Set Date") Color.parseColor("#8E8E8E") else Color.parseColor(
-                "#FFC107"
-            )
+        val hasDate = state.formattedDate != null
+        binding.tvSetDate.text = state.formattedDate ?: getString(R.string.set_date)
+
+        val dateTextColor = ContextCompat.getColor(
+            context,
+            if (hasDate) R.color.text_main else R.color.text_secondary
+        )
+        val dateIconColor = ContextCompat.getColor(
+            context,
+            if (hasDate) R.color.date_accent_yellow else R.color.icon_placeholder
         )
 
-        binding.tvSetTime.setTextColor(if (state.formattedTime == "Set Time") Color.GRAY else Color.BLACK)
-        binding.ivTimeIcon.setColorFilter(
-            if (state.formattedTime == "Set Time") Color.parseColor("#8E8E8E") else Color.parseColor(
-                "#FF5722"
-            )
+        binding.tvSetDate.setTextColor(dateTextColor)
+        binding.ivDateIcon.setColorFilter(dateIconColor, PorterDuff.Mode.SRC_IN)
+
+        val hasTime = state.formattedTime != null
+        binding.tvSetTime.text = state.formattedTime ?: getString(R.string.set_time)
+
+        val timeTextColor = ContextCompat.getColor(
+            context,
+            if (hasTime) R.color.text_main else R.color.text_secondary
+        )
+        val timeIconColor = ContextCompat.getColor(
+            context,
+            if (hasTime) R.color.time_accent_orange else R.color.icon_placeholder
         )
 
-        if (state.isReminderEnabled) {
-            binding.ivReminderIcon.setColorFilter(Color.parseColor("#4A90E2"))
-            binding.tvSetReminder.text = "Reminder Enabled"
-            binding.tvSetReminder.setTextColor(Color.BLACK)
+        binding.tvSetTime.setTextColor(timeTextColor)
+        binding.ivTimeIcon.setColorFilter(timeIconColor, PorterDuff.Mode.SRC_IN)
+
+        val reminderIconColor = ContextCompat.getColor(
+            context,
+            if (state.isReminderEnabled) R.color.primary_blue else R.color.icon_placeholder
+        )
+        val reminderTextColor = ContextCompat.getColor(
+            context,
+            if (state.isReminderEnabled) R.color.text_main else R.color.text_secondary
+        )
+
+        binding.ivReminderIcon.setColorFilter(reminderIconColor, PorterDuff.Mode.SRC_IN)
+        binding.tvSetReminder.setTextColor(reminderTextColor)
+        binding.tvSetReminder.text = if (state.isReminderEnabled) {
+            getString(R.string.reminder_enabled)
         } else {
-            binding.ivReminderIcon.setColorFilter(Color.parseColor("#8E8E8E"))
-            binding.tvSetReminder.text = "Set Reminder"
-            binding.tvSetReminder.setTextColor(Color.GRAY)
+            getString(R.string.set_reminder)
         }
     }
 
@@ -161,7 +191,7 @@ class EditTaskFragment : Fragment() {
         CategoryMapper.getUiCategories().forEach { item ->
             val itemBinding = ItemCategoryDropdownBinding.inflate(layoutInflater, container, false)
             with(itemBinding) {
-                tvCategoryName.text = item.title
+                tvCategoryName.text = item.title.asString(root.context)
                 ivCategoryIcon.setImageResource(item.iconRes)
                 ivCategoryIcon.setColorFilter(
                     ContextCompat.getColor(

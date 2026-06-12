@@ -95,8 +95,11 @@ class AllTasksFragment : Fragment() {
                         }
 
                         is AllTasksTasksState.Error -> {
-                            Toast.makeText(requireContext(), tasksState.message, Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(
+                                requireContext(),
+                                tasksState.message.asString(requireContext()),
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }

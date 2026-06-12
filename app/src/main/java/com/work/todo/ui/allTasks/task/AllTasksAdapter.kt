@@ -41,7 +41,7 @@ class AllTasksAdapter(
         ) {
             with(binding) {
                 tvTaskTitle.text = item.title
-                tvTaskDateTime.text = item.dateTimeInfo
+                tvTaskDateTime.text = item.dateTimeInfo.asString(root.context)
 
                 tvTaskDateTime.setTextColor(
                     if (item.isOverdue) Color.RED else Color.GRAY

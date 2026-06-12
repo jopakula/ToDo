@@ -2,6 +2,7 @@ package com.work.todo.ui.mapper
 
 import com.work.todo.R
 import com.work.todo.domain.TaskCategory
+import com.work.todo.ui.UiText
 import com.work.todo.ui.home.category.CategoryItem
 
 object CategoryMapper {
@@ -9,10 +10,10 @@ object CategoryMapper {
         return TaskCategory.entries.map { category ->
             CategoryItem(
                 title = when (category) {
-                    TaskCategory.WORK -> "Work"
-                    TaskCategory.PERSONAL -> "Personal"
-                    TaskCategory.SHOPPING -> "Shopping"
-                    TaskCategory.HEALTH -> "Health"
+                    TaskCategory.WORK -> UiText.ResourceString(R.string.category_work)
+                    TaskCategory.PERSONAL -> UiText.ResourceString(R.string.category_personal)
+                    TaskCategory.SHOPPING -> UiText.ResourceString(R.string.category_shopping)
+                    TaskCategory.HEALTH -> UiText.ResourceString(R.string.category_health)
                 },
                 iconRes = when (category) {
                     TaskCategory.WORK -> R.drawable.ic_category_work

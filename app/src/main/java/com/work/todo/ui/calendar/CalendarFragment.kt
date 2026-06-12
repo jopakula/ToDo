@@ -82,7 +82,7 @@ class CalendarFragment : Fragment() {
                             binding.rvCalendarTasks.visibility = View.GONE
                             Toast.makeText(
                                 requireContext(),
-                                state.tasksState.message,
+                                state.tasksState.message.asString(requireContext()),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }

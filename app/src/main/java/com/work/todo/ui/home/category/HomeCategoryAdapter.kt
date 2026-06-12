@@ -26,7 +26,11 @@ class HomeCategoryAdapter(
 
     fun updateData(newItems: List<CategoryItem>, selectedCat: TaskCategory?) {
         this.selectedCategory = selectedCat
-        submitList(newItems)
+
+        val updatedList = newItems.map { item ->
+            item.copy(isSelected = item.categoryType == selectedCat)
+        }
+        submitList(updatedList)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryViewHolder {
@@ -36,7 +40,8 @@ class HomeCategoryAdapter(
     }
 
     override fun onBindViewHolder(holder: CategoryViewHolder, position: Int) {
-        holder.bind(getItem(position), selectedCategory, onItemClick)
+        val hasAnySelection = selectedCategory != null
+        holder.bind(getItem(position), hasAnySelection, onItemClick)
     }
 
     class CategoryViewHolder(private val binding: HomeItemCategoryBinding) :
@@ -44,22 +49,18 @@ class HomeCategoryAdapter(
 
         fun bind(
             item: CategoryItem,
-            selectedCategory: TaskCategory?,
+            hasAnySelection: Boolean,
             onClick: (CategoryItem) -> Unit
         ) {
             with(binding) {
-                tvCatTitle.text = item.title
+                tvCatTitle.text = item.title.asString(root.context)
                 ivCatIcon.setImageResource(item.iconRes)
 
                 val color = ContextCompat.getColor(root.context, item.colorRes)
                 tvCatTitle.setTextColor(color)
                 ivCatIcon.setColorFilter(color, PorterDuff.Mode.SRC_IN)
 
-                root.alpha = when {
-                    selectedCategory == null -> 1.0f
-                    selectedCategory == item.categoryType -> 1.0f
-                    else -> 0.25f
-                }
+                root.alpha = if (hasAnySelection && !item.isSelected) 0.75f else 1.0f
 
                 root.setOnClickListener { onClick(item) }
             }

@@ -2,7 +2,10 @@ package com.work.todo.ui.allTasks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.work.todo.R
+import com.work.todo.data.utils.TaskDateTimeUtils
 import com.work.todo.domain.TaskRepository
+import com.work.todo.ui.UiText
 import com.work.todo.ui.allTasks.task.AllTasksTasksState
 import com.work.todo.ui.allTasks.task.AllTasksUiState
 import com.work.todo.ui.mapper.AllTasksMapper
@@ -27,7 +30,9 @@ class AllTasksViewModel(
         _searchQuery
     ) { tasks, query ->
 
-        val allItems = AllTasksMapper.mapToUiList(tasks)
+        val todayDate = TaskDateTimeUtils.getCurrentDbDate()
+
+        val allItems = AllTasksMapper.mapToUiList(tasks, todayDate)
 
         val filteredItems = if (query.isEmpty()) {
             allItems
@@ -48,13 +53,9 @@ class AllTasksViewModel(
     }
         .onStart { emit(AllTasksUiState(tasksState = AllTasksTasksState.Loading)) }
         .catch { e ->
-            emit(
-                AllTasksUiState(
-                    tasksState = AllTasksTasksState.Error(
-                        e.message ?: "Error"
-                    )
-                )
-            )
+            val errorText = e.message?.let { UiText.DynamicString(it) }
+                ?: UiText.ResourceString(R.string.error_unknown)
+            emit(AllTasksUiState(tasksState = AllTasksTasksState.Error(errorText)))
         }
         .stateIn(
             scope = viewModelScope,
