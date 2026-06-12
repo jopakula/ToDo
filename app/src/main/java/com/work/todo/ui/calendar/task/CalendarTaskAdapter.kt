@@ -1,17 +1,17 @@
-package com.work.todo.ui.calendar
+package com.work.todo.ui.calendar.task
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.work.todo.databinding.ItemTaskCalendarBinding
 
 class CalendarTaskAdapter(
     private val onDeleteClick: (CalendarTaskItem) -> Unit
-) : RecyclerView.Adapter<CalendarTaskAdapter.CalendarViewHolder>() {
+) : ListAdapter<CalendarTaskItem, CalendarTaskAdapter.CalendarViewHolder>(DiffCallback) {
 
-    private val diffCallback = object : DiffUtil.ItemCallback<CalendarTaskItem>() {
+    private companion object DiffCallback : DiffUtil.ItemCallback<CalendarTaskItem>() {
         override fun areItemsTheSame(
             oldItem: CalendarTaskItem,
             newItem: CalendarTaskItem
@@ -25,12 +25,6 @@ class CalendarTaskAdapter(
             oldItem == newItem
     }
 
-    private val differ = AsyncListDiffer(this, diffCallback)
-
-    fun submitList(list: List<CalendarTaskItem>) {
-        differ.submitList(list)
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CalendarViewHolder {
         val binding =
             ItemTaskCalendarBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -38,13 +32,12 @@ class CalendarTaskAdapter(
     }
 
     override fun onBindViewHolder(holder: CalendarViewHolder, position: Int) {
-        holder.bind(differ.currentList[position], onDeleteClick)
+        holder.bind(getItem(position), onDeleteClick)
     }
-
-    override fun getItemCount() = differ.currentList.size
 
     class CalendarViewHolder(private val binding: ItemTaskCalendarBinding) :
         RecyclerView.ViewHolder(binding.root) {
+
         fun bind(item: CalendarTaskItem, onDelete: (CalendarTaskItem) -> Unit) {
             with(binding) {
                 tvDate.text = item.date

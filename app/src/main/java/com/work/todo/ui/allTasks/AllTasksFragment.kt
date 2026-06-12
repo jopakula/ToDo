@@ -45,7 +45,7 @@ class AllTasksFragment : Fragment() {
 
     private fun setupListeners() {
         binding.etSearchAll.doOnTextChanged { text, _, _, _ ->
-            viewModel.setSearchQuery(text.toString())
+            viewModel.setSearchQuery(text.toString().trim())
         }
 
         binding.tvBack.setOnClickListener { findNavController().popBackStack() }
@@ -78,20 +78,20 @@ class AllTasksFragment : Fragment() {
                         is AllTasksTasksState.Loading -> {}
 
                         is AllTasksTasksState.Success -> {
-                            overdueAdapter.submitList(tasksState.overdueTasks)
-                            regularAdapter.submitList(tasksState.regularTasks)
-
                             binding.tvOverdueLabel.visibility =
                                 if (tasksState.overdueTasks.isEmpty()) View.GONE else View.VISIBLE
                             binding.tvAllTasksLabel.visibility =
                                 if (tasksState.regularTasks.isEmpty()) View.GONE else View.VISIBLE
+
+                            overdueAdapter.submitList(tasksState.overdueTasks)
+                            regularAdapter.submitList(tasksState.regularTasks)
                         }
 
                         is AllTasksTasksState.Empty -> {
-                            overdueAdapter.submitList(emptyList())
-                            regularAdapter.submitList(emptyList())
                             binding.tvOverdueLabel.visibility = View.GONE
                             binding.tvAllTasksLabel.visibility = View.GONE
+                            overdueAdapter.submitList(emptyList())
+                            regularAdapter.submitList(emptyList())
                         }
 
                         is AllTasksTasksState.Error -> {
