@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/bootom_nav_graph"
+    app:startDestination="@id/home">
+
+    <fragment
+        android:id="@+id/calendar"
+        android:name="com.work.todo.ui.calendar.CalendarFragment"
+        android:label="fragment_calendar"
+        tools:layout="@layout/fragment_calendar" />
+    <fragment
+        android:id="@+id/home"
+        android:name="com.work.todo.ui.home.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_home_to_allTasks"
+            app:destination="@id/allTasks" />
+        <action
+            android:id="@+id/action_home_to_editTask"
+            app:destination="@id/editTask" />
+    </fragment>
+    <fragment
+        android:id="@+id/allTasks"
+        android:name="com.work.todo.ui.allTasks.AllTasksFragment"
+        android:label="fragment_all_tasks" />
+    <fragment
+        android:id="@+id/addTask"
+        android:name="com.work.todo.ui.task.addTask.AddTaskFragment"
+        android:label="fragment_add_task" />
+    <fragment
+        android:id="@+id/editTask"
+        android:name="com.work.todo.ui.task.editTask.EditTaskFragment"
+        android:label="fragment_edit_task">
+        <argument
+            android:name="taskId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+    </fragment>
+</navigation>
