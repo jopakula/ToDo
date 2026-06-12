@@ -11,6 +11,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.work.todo.databinding.FragmentCalendarBinding
+import com.work.todo.ui.calendar.task.CalendarTaskAdapter
+import com.work.todo.ui.calendar.task.CalendarTasksState
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -32,7 +34,6 @@ class CalendarFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentCalendarBinding.bind(view)
 
         setupRecyclerView()
         setupCalendar()
@@ -59,27 +60,31 @@ class CalendarFragment : Fragment() {
     private fun observeState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.calendarState.collect { state ->
-                    when (state) {
-                        is CalendarState.Loading -> {
+                viewModel.uiState.collect { state ->
+
+                    when (state.tasksState) {
+                        is CalendarTasksState.Loading -> {
                             binding.rvCalendarTasks.visibility = View.GONE
                             calendarAdapter.submitList(emptyList())
                         }
 
-                        is CalendarState.Success -> {
+                        is CalendarTasksState.Success -> {
                             binding.rvCalendarTasks.visibility = View.VISIBLE
-                            calendarAdapter.submitList(state.tasks)
+                            calendarAdapter.submitList(state.tasksState.tasks)
                         }
 
-                        is CalendarState.Empty -> {
+                        is CalendarTasksState.Empty -> {
                             binding.rvCalendarTasks.visibility = View.GONE
                             calendarAdapter.submitList(emptyList())
                         }
 
-                        is CalendarState.Error -> {
+                        is CalendarTasksState.Error -> {
                             binding.rvCalendarTasks.visibility = View.GONE
-                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(
+                                requireContext(),
+                                state.tasksState.message,
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }

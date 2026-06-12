@@ -2,10 +2,12 @@ package com.work.todo.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.work.todo.database.TaskDao
+import com.work.todo.data.utils.TaskDateTimeUtils
+import com.work.todo.domain.TaskRepository
+import com.work.todo.ui.calendar.task.CalendarTasksState
+import com.work.todo.ui.calendar.task.CalendarUiState
 import com.work.todo.ui.mapper.CalendarMapper
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,51 +16,61 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import kotlinx.coroutines.withContext
 
-class CalendarViewModel(private val taskDao: TaskDao) : ViewModel() {
+class CalendarViewModel(
+    private val taskRepository: TaskRepository
+) : ViewModel() {
 
-    private val dbDateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    private val _selectedDate = MutableStateFlow(TaskDateTimeUtils.getCurrentDbDate())
 
-    private val _selectedDate = MutableStateFlow(dbDateFormatter.format(Date()))
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val calendarState: StateFlow<CalendarState> = _selectedDate
+    val uiState: StateFlow<CalendarUiState> = _selectedDate
         .flatMapLatest { date ->
-            taskDao.getFlowTasksByDate(date).map { entities ->
-                val uiTasks = CalendarMapper.mapToUiList(entities)
-
-                if (uiTasks.isEmpty()) CalendarState.Empty else CalendarState.Success(uiTasks)
+            taskRepository.getFlowTasksByDate(date).map { tasks ->
+                val uiTasks = CalendarMapper.mapToUiList(tasks)
+                val tasksState =
+                    if (uiTasks.isEmpty()) CalendarTasksState.Empty else CalendarTasksState.Success(
+                        uiTasks
+                    )
+                CalendarUiState(tasksState = tasksState, selectedDateRaw = date)
             }
         }
         .onStart {
-            emit(CalendarState.Loading)
+            emit(CalendarUiState(tasksState = CalendarTasksState.Loading))
         }
         .catch { e ->
-            emit(CalendarState.Error(e.message ?: "Unknown Error"))
+            emit(
+                CalendarUiState(
+                    tasksState = CalendarTasksState.Error(
+                        e.message ?: "Unknown Error"
+                    )
+                )
+            )
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = CalendarState.Loading
+            initialValue = CalendarUiState()
         )
 
     fun selectDate(year: Int, month: Int, day: Int) {
-        val calendar = Calendar.getInstance()
-        calendar.set(year, month, day)
-        _selectedDate.value = dbDateFormatter.format(calendar.time)
+        _selectedDate.value = TaskDateTimeUtils.formatComponentsToDbDate(year, month, day)
     }
 
     fun deleteTask(taskId: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             try {
-                val task = taskDao.getTaskById(taskId)
-                task?.let { taskDao.deleteTask(it) }
+                withContext(Dispatchers.IO) {
+                    val task = taskRepository.getTaskById(taskId)
+                    task?.let { taskRepository.deleteTask(it) }
+                }
             } catch (e: Exception) {
+                _selectedDate.update { currentDate ->
+                    _selectedDate.value = currentDate
+                    currentDate
+                }
             }
         }
     }

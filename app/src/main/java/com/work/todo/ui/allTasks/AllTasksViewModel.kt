@@ -2,7 +2,9 @@ package com.work.todo.ui.allTasks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.work.todo.database.TaskDao
+import com.work.todo.domain.TaskRepository
+import com.work.todo.ui.allTasks.task.AllTasksTasksState
+import com.work.todo.ui.allTasks.task.AllTasksUiState
 import com.work.todo.ui.mapper.AllTasksMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,16 +16,18 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class AllTasksViewModel(private val taskDao: TaskDao) : ViewModel() {
+class AllTasksViewModel(
+    private val taskRepository: TaskRepository
+) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
 
-    val uiState: StateFlow<AllTasksState> = combine(
-        taskDao.getFlowAllTasks(),
+    val uiState: StateFlow<AllTasksUiState> = combine(
+        taskRepository.getFlowAllTasks(),
         _searchQuery
-    ) { entities, query ->
+    ) { tasks, query ->
 
-        val allItems = AllTasksMapper.mapToUiList(entities)
+        val allItems = AllTasksMapper.mapToUiList(tasks)
 
         val filteredItems = if (query.isEmpty()) {
             allItems
@@ -31,21 +35,31 @@ class AllTasksViewModel(private val taskDao: TaskDao) : ViewModel() {
             allItems.filter { it.title.contains(query, ignoreCase = true) }
         }
 
-        if (filteredItems.isEmpty()) {
-            AllTasksState.Empty
+        val tasksState = if (filteredItems.isEmpty()) {
+            AllTasksTasksState.Empty
         } else {
-            AllTasksState.Success(
+            AllTasksTasksState.Success(
                 overdueTasks = filteredItems.filter { it.isOverdue },
                 regularTasks = filteredItems.filter { !it.isOverdue }
             )
         }
+
+        AllTasksUiState(tasksState = tasksState, searchQuery = query)
     }
-        .onStart { emit(AllTasksState.Loading) }
-        .catch { e -> emit(AllTasksState.Error(e.message ?: "Error")) }
+        .onStart { emit(AllTasksUiState(tasksState = AllTasksTasksState.Loading)) }
+        .catch { e ->
+            emit(
+                AllTasksUiState(
+                    tasksState = AllTasksTasksState.Error(
+                        e.message ?: "Error"
+                    )
+                )
+            )
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = AllTasksState.Loading
+            initialValue = AllTasksUiState()
         )
 
     fun setSearchQuery(text: String) {
@@ -54,14 +68,20 @@ class AllTasksViewModel(private val taskDao: TaskDao) : ViewModel() {
 
     fun toggleTaskStatus(id: Int, isDone: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            taskDao.updateTaskStatus(id, isDone)
+            try {
+                taskRepository.updateTaskStatus(id, isDone)
+            } catch (e: Exception) {
+            }
         }
     }
 
     fun deleteTask(id: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            val task = taskDao.getTaskById(id)
-            task?.let { taskDao.deleteTask(it) }
+            try {
+                val task = taskRepository.getTaskById(id)
+                task?.let { taskRepository.deleteTask(it) }
+            } catch (e: Exception) {
+            }
         }
     }
 }

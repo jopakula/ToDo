@@ -1,4 +1,4 @@
-package com.work.todo.ui.calendar
+package com.work.todo.ui.calendar.task
 
 data class CalendarTaskItem(
     val id: Int,

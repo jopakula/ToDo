@@ -1,7 +1,7 @@
 package com.work.todo.ui.mapper
 
 import com.work.todo.R
-import com.work.todo.database.TaskCategory
+import com.work.todo.domain.TaskCategory
 import com.work.todo.ui.home.category.CategoryItem
 
 object CategoryMapper {

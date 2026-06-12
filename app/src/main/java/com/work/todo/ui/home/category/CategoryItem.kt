@@ -1,6 +1,6 @@
 package com.work.todo.ui.home.category
 
-import com.work.todo.database.TaskCategory
+import com.work.todo.domain.TaskCategory
 
 data class CategoryItem(
     val title: String,

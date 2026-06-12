@@ -10,23 +10,20 @@ import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.work.todo.database.TaskCategory
 import com.work.todo.databinding.FragmentEditTaskBinding
 import com.work.todo.databinding.ItemCategoryDropdownBinding
 import com.work.todo.notifications.ReminderManager
 import com.work.todo.ui.mapper.CategoryMapper
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 class EditTaskFragment : Fragment() {
 
@@ -34,20 +31,8 @@ class EditTaskFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var reminderManager: ReminderManager
-
     private val args: EditTaskFragmentArgs by navArgs()
     private val viewModel: EditTaskViewModel by viewModel()
-
-    private var selectedCategory: TaskCategory = TaskCategory.WORK
-    private var isMenuExpanded = false
-    private var isReminderActivated = false
-
-    private var selectedDateMillis: Long? = null
-    private var selectedTimeMillis: Long? = null
-
-    private val dateFormatter = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
-    private val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
-    private val dbDateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -59,62 +44,35 @@ class EditTaskFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         reminderManager = ReminderManager(requireContext())
 
         viewModel.loadTask(args.taskId)
 
-        setupObservers()
         setupListeners()
-        setupFab()
+        setupObservers()
+        setupFabAnimation()
     }
 
     private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+
                 launch {
-                    viewModel.taskState.collect { task ->
-                        task?.let { entity ->
-                            binding.etTaskName.setText(entity.title)
-                            binding.etNotes.setText(entity.notes)
-                            selectedCategory = entity.category
-                            binding.tvSelectedCategory.text = entity.category.name.lowercase()
-                                .replaceFirstChar { it.uppercase() }
-
-                            entity.date?.let { dateStr ->
-                                val date = dbDateFormatter.parse(dateStr)
-                                date?.let {
-                                    selectedDateMillis = it.time
-                                    binding.tvSetDate.text = dateFormatter.format(it)
-                                    binding.tvSetDate.setTextColor(Color.BLACK)
-                                    binding.ivDateIcon.setColorFilter(Color.parseColor("#FFC107"))
-                                }
-                            }
-
-                            entity.time?.let { timeStr ->
-                                val time = timeFormatter.parse(timeStr)
-                                time?.let {
-                                    selectedTimeMillis = it.time
-                                    binding.tvSetTime.text = timeFormatter.format(it)
-                                    binding.tvSetTime.setTextColor(Color.BLACK)
-                                    binding.ivTimeIcon.setColorFilter(Color.parseColor("#FF5722"))
-                                }
-                            }
-
-                            isReminderActivated = entity.reminder
-                            applyReminderUi(isReminderActivated)
-                        }
+                    viewModel.uiState.collect { state ->
+                        renderUiState(state)
                     }
                 }
+
                 launch {
                     viewModel.scheduleReminderEvent.collect { (taskId, timeInMillis) ->
                         reminderManager.setReminder(
                             taskId = taskId,
-                            title = binding.etTaskName.text.toString(),
+                            title = binding.etTaskName.text.toString().trim(),
                             triggerTimeMs = timeInMillis
                         )
                     }
                 }
+
                 launch {
                     viewModel.cancelReminderEvent.collect { taskId ->
                         reminderManager.cancelReminder(taskId)
@@ -124,111 +82,82 @@ class EditTaskFragment : Fragment() {
         }
     }
 
-    private fun setupListeners() {
-        binding.tvCancel.setOnClickListener { findNavController().popBackStack() }
-        binding.btnSelectCategory.setOnClickListener { toggleMenu() }
-        binding.llSetDate.setOnClickListener { showDatePicker() }
-        binding.llSetTime.setOnClickListener { showTimePicker() }
-        binding.llSetReminder.setOnClickListener { updateReminderUi() }
+    private fun renderUiState(state: EditTaskUiState) {
+        binding.fab.isEnabled = !state.isLoading
 
-        binding.fab.setOnClickListener {
-            validateAndSave()
-        }
-    }
-
-    private fun updateReminderUi() {
-        isReminderActivated = !isReminderActivated
-        applyReminderUi(isReminderActivated)
-    }
-
-    private fun applyReminderUi(isActive: Boolean) {
-        val tvReminder = binding.tvSetReminder
-        if (isActive) {
-            binding.ivReminderIcon.setColorFilter(Color.parseColor("#4A90E2")) // Синий
-            tvReminder.text = "Reminder Enabled"
-            tvReminder.setTextColor(Color.BLACK)
-        } else {
-            binding.ivReminderIcon.setColorFilter(Color.parseColor("#8E8E8E")) // Серый
-            tvReminder.text = "Set Reminder"
-            tvReminder.setTextColor(Color.GRAY)
-        }
-    }
-
-    private fun validateAndSave() {
-        val title = binding.etTaskName.text.toString().trim()
-        val notes = binding.etNotes.text.toString().trim()
-
-        if (title.isEmpty()) {
-            Toast.makeText(requireContext(), "Введите название задачи", Toast.LENGTH_SHORT).show()
+        if (state.isSaved) {
+            Toast.makeText(requireContext(), "Изменения сохранены", Toast.LENGTH_SHORT).show()
+            findNavController().popBackStack()
             return
         }
 
-        val dateString = selectedDateMillis?.let { dbDateFormatter.format(Date(it)) }
-        val timeString = selectedTimeMillis?.let { timeFormatter.format(Date(it)) }
+        state.error?.let {
+            Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+        }
 
-        viewModel.updateTask(
-            title = title,
-            notes = notes.ifEmpty { null },
-            category = selectedCategory,
-            date = dateString,
-            time = timeString,
-            reminder = isReminderActivated
+        if (binding.etTaskName.text.toString() != state.title) {
+            binding.etTaskName.setText(state.title)
+        }
+        if (binding.etNotes.text.toString() != state.notes) {
+            binding.etNotes.setText(state.notes)
+        }
+
+        state.selectedCategory?.let {
+            binding.tvSelectedCategory.text = it.title
+        }
+
+        binding.llCategoryOptions.visibility =
+            if (state.isCategoryMenuExpanded) View.VISIBLE else View.GONE
+        binding.ivCategoryArrow.animate().rotation(if (state.isCategoryMenuExpanded) 180f else 0f)
+            .start()
+        if (state.isCategoryMenuExpanded) {
+            renderCategoryMenu()
+        }
+
+        binding.tvSetDate.text = state.formattedDate
+        binding.tvSetTime.text = state.formattedTime
+
+        binding.tvSetDate.setTextColor(if (state.formattedDate == "Set Date") Color.GRAY else Color.BLACK)
+        binding.ivDateIcon.setColorFilter(
+            if (state.formattedDate == "Set Date") Color.parseColor("#8E8E8E") else Color.parseColor(
+                "#FFC107"
+            )
         )
 
-        Toast.makeText(requireContext(), "Изменения сохранены", Toast.LENGTH_SHORT).show()
-        findNavController().popBackStack()
+        binding.tvSetTime.setTextColor(if (state.formattedTime == "Set Time") Color.GRAY else Color.BLACK)
+        binding.ivTimeIcon.setColorFilter(
+            if (state.formattedTime == "Set Time") Color.parseColor("#8E8E8E") else Color.parseColor(
+                "#FF5722"
+            )
+        )
+
+        if (state.isReminderEnabled) {
+            binding.ivReminderIcon.setColorFilter(Color.parseColor("#4A90E2"))
+            binding.tvSetReminder.text = "Reminder Enabled"
+            binding.tvSetReminder.setTextColor(Color.BLACK)
+        } else {
+            binding.ivReminderIcon.setColorFilter(Color.parseColor("#8E8E8E"))
+            binding.tvSetReminder.text = "Set Reminder"
+            binding.tvSetReminder.setTextColor(Color.GRAY)
+        }
     }
 
-    private fun showDatePicker() {
-        val calendar = Calendar.getInstance()
-        selectedDateMillis?.let { calendar.timeInMillis = it }
+    private fun setupListeners() {
+        binding.etTaskName.doAfterTextChanged { viewModel.onTitleChanged(it?.toString().orEmpty()) }
+        binding.etNotes.doAfterTextChanged { viewModel.onNotesChanged(it?.toString().orEmpty()) }
 
-        DatePickerDialog(
-            requireContext(), { _, y, m, d ->
-                val pickedCal = Calendar.getInstance()
-                pickedCal.set(y, m, d)
-                selectedDateMillis = pickedCal.timeInMillis
-
-                binding.tvSetDate.text = dateFormatter.format(pickedCal.time)
-                binding.tvSetDate.setTextColor(Color.BLACK)
-                binding.ivDateIcon.setColorFilter(Color.parseColor("#FFC107"))
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        ).show()
+        binding.btnSelectCategory.setOnClickListener { viewModel.toggleCategoryMenu() }
+        binding.fab.setOnClickListener { viewModel.updateTask() }
+        binding.tvCancel.setOnClickListener { findNavController().popBackStack() }
+        binding.llSetDate.setOnClickListener { showDatePicker() }
+        binding.llSetTime.setOnClickListener { showTimePicker() }
+        binding.llSetReminder.setOnClickListener { viewModel.toggleReminder() }
     }
 
-    private fun showTimePicker() {
-        val calendar = Calendar.getInstance()
-        selectedTimeMillis?.let { calendar.timeInMillis = it }
-
-        TimePickerDialog(
-            requireContext(), { _, h, m ->
-                val pickedCal = Calendar.getInstance()
-                pickedCal.set(Calendar.HOUR_OF_DAY, h)
-                pickedCal.set(Calendar.MINUTE, m)
-                selectedTimeMillis = pickedCal.timeInMillis
-
-                binding.tvSetTime.text = timeFormatter.format(pickedCal.time)
-                binding.tvSetTime.setTextColor(Color.BLACK)
-                binding.ivTimeIcon.setColorFilter(Color.parseColor("#FF5722"))
-            },
-            calendar.get(Calendar.HOUR_OF_DAY),
-            calendar.get(Calendar.MINUTE), true
-        ).show()
-    }
-
-    private fun toggleMenu() {
-        if (!isMenuExpanded) setupCategoryMenu()
-        isMenuExpanded = !isMenuExpanded
-        binding.ivCategoryArrow.animate().rotation(if (isMenuExpanded) 180f else 0f).start()
-        binding.llCategoryOptions.visibility = if (isMenuExpanded) View.VISIBLE else View.GONE
-    }
-
-    private fun setupCategoryMenu() {
+    private fun renderCategoryMenu() {
         val container = binding.llCategoryOptions
         container.removeAllViews()
+
         CategoryMapper.getUiCategories().forEach { item ->
             val itemBinding = ItemCategoryDropdownBinding.inflate(layoutInflater, container, false)
             with(itemBinding) {
@@ -240,33 +169,39 @@ class EditTaskFragment : Fragment() {
                         item.colorRes
                     )
                 )
-                root.setOnClickListener {
-                    selectedCategory = item.categoryType
-                    binding.tvSelectedCategory.text = item.title
-                    toggleMenu()
-                }
+                root.setOnClickListener { viewModel.selectCategory(item) }
             }
             container.addView(itemBinding.root)
         }
     }
 
-    private fun setupFab() {
-        binding.fab.apply {
-            scaleX = 0f
-            scaleY = 0f
-            alpha = 0f
-            postDelayed({ animateFab() }, 300)
-        }
+    private fun showDatePicker() {
+        val calendar = Calendar.getInstance()
+        DatePickerDialog(
+            requireContext(),
+            { _, y, m, d -> viewModel.onDateSelected(y, m, d) },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
-    private fun animateFab() {
+    private fun showTimePicker() {
+        val calendar = Calendar.getInstance()
+        TimePickerDialog(
+            requireContext(), { _, h, m -> viewModel.onTimeSelected(h, m) },
+            calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true
+        ).show()
+    }
+
+    private fun setupFabAnimation() {
         binding.fab.apply {
-            visibility = View.VISIBLE
-            animate()
-                .scaleX(1f).scaleY(1f).alpha(1f)
-                .setDuration(500)
-                .setInterpolator(OvershootInterpolator())
-                .start()
+            scaleX = 0f; scaleY = 0f; alpha = 0f
+            postDelayed({
+                visibility = View.VISIBLE
+                animate().scaleX(1f).scaleY(1f).alpha(1f)
+                    .setDuration(500).setInterpolator(OvershootInterpolator()).start()
+            }, 300)
         }
     }
 

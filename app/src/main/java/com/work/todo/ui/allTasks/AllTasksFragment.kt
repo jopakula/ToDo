@@ -13,6 +13,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.work.todo.databinding.FragmentAllTasksBinding
+import com.work.todo.ui.allTasks.task.AllTasksAdapter
+import com.work.todo.ui.allTasks.task.AllTasksTasksState
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -35,11 +37,13 @@ class AllTasksFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentAllTasksBinding.bind(view)
 
         setupAdapters()
         observeViewModel()
+        setupListeners()
+    }
 
+    private fun setupListeners() {
         binding.etSearchAll.doOnTextChanged { text, _, _, _ ->
             viewModel.setSearchQuery(text.toString())
         }
@@ -58,36 +62,40 @@ class AllTasksFragment : Fragment() {
             onDeleteClicked = { item -> viewModel.deleteTask(item.id) }
         )
 
-        binding.rvOverdueTasks.adapter = overdueAdapter
-        binding.rvAllTasksList.adapter = regularAdapter
-        binding.rvAllTasksList.layoutManager = LinearLayoutManager(requireContext())
         binding.rvOverdueTasks.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvOverdueTasks.adapter = overdueAdapter
 
+        binding.rvAllTasksList.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvAllTasksList.adapter = regularAdapter
     }
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
-                    when (state) {
-                        is AllTasksState.Loading -> {}
-                        is AllTasksState.Success -> {
-                            overdueAdapter.submitList(state.overdueTasks)
-                            regularAdapter.submitList(state.regularTasks)
+
+                    when (val tasksState = state.tasksState) {
+                        is AllTasksTasksState.Loading -> {}
+
+                        is AllTasksTasksState.Success -> {
+                            overdueAdapter.submitList(tasksState.overdueTasks)
+                            regularAdapter.submitList(tasksState.regularTasks)
 
                             binding.tvOverdueLabel.visibility =
-                                if (state.overdueTasks.isEmpty()) View.GONE else View.VISIBLE
+                                if (tasksState.overdueTasks.isEmpty()) View.GONE else View.VISIBLE
                             binding.tvAllTasksLabel.visibility =
-                                if (state.regularTasks.isEmpty()) View.GONE else View.VISIBLE
+                                if (tasksState.regularTasks.isEmpty()) View.GONE else View.VISIBLE
                         }
 
-                        is AllTasksState.Empty -> {
+                        is AllTasksTasksState.Empty -> {
                             overdueAdapter.submitList(emptyList())
                             regularAdapter.submitList(emptyList())
+                            binding.tvOverdueLabel.visibility = View.GONE
+                            binding.tvAllTasksLabel.visibility = View.GONE
                         }
 
-                        is AllTasksState.Error -> {
-                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT)
+                        is AllTasksTasksState.Error -> {
+                            Toast.makeText(requireContext(), tasksState.message, Toast.LENGTH_SHORT)
                                 .show()
                         }
                     }

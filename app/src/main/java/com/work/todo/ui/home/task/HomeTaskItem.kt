@@ -4,5 +4,5 @@ data class HomeTaskItem(
     val id: Int,
     val title: String,
     val time: String,
-    var isDone: Boolean = false,
+    val isDone: Boolean = false,
 )

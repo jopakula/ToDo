@@ -1,4 +1,4 @@
-package com.work.todo.database
+package com.work.todo.data.database
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -17,7 +17,7 @@ interface TaskDao {
     fun getFlowTasksByDate(date: String): Flow<List<TaskEntity>>
 
     @Query("SELECT * FROM tasks WHERE category = :category")
-    fun getFlowTasksByCategory(category: TaskCategory): Flow<List<TaskEntity>>
+    fun getFlowTasksByCategory(category: TaskEntityCategory): Flow<List<TaskEntity>>
 
     @Query("SELECT * FROM tasks WHERE id = :taskId")
     suspend fun getTaskById(taskId: Int): TaskEntity?

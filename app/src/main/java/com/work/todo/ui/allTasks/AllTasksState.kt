@@ -1,5 +1,7 @@
 package com.work.todo.ui.allTasks
 
+import com.work.todo.ui.allTasks.task.AllTasksItem
+
 sealed class AllTasksState {
     object Loading : AllTasksState()
     object Empty : AllTasksState()

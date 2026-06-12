@@ -1,7 +1,7 @@
 package com.work.todo.di
 
 import android.app.Application
-import com.work.todo.database.databaseModule
+import com.work.todo.data.database.databaseModule
 import com.work.todo.ui.viewModelModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger

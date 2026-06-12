@@ -15,8 +15,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.work.todo.R
 import com.work.todo.databinding.FragmentHomeBinding
 import com.work.todo.ui.home.category.HomeCategoryAdapter
+import com.work.todo.ui.home.task.HomeTasksState
 import com.work.todo.ui.home.task.HomeTodaysTaskAdapter
-import com.work.todo.ui.mapper.CategoryMapper
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -26,7 +26,9 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: HomeViewModel by viewModel()
-    private lateinit var adapter: HomeTodaysTaskAdapter
+
+    private lateinit var tasksAdapter: HomeTodaysTaskAdapter
+    private lateinit var categoriesAdapter: HomeCategoryAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -48,13 +50,13 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupRecyclerViews() {
-        val categories = CategoryMapper.getUiCategories()
-        binding.rvCategories.layoutManager = GridLayoutManager(requireContext(), 2)
-        binding.rvCategories.adapter = HomeCategoryAdapter(categories) { item, _ ->
+        categoriesAdapter = HomeCategoryAdapter { item ->
             viewModel.selectCategory(item.categoryType)
         }
+        binding.rvCategories.layoutManager = GridLayoutManager(requireContext(), 2)
+        binding.rvCategories.adapter = categoriesAdapter
 
-        adapter = HomeTodaysTaskAdapter(
+        tasksAdapter = HomeTodaysTaskAdapter(
             onItemClick = { task ->
                 val action = HomeFragmentDirections.actionHomeToEditTask(task.id)
                 findNavController().navigate(action)
@@ -63,36 +65,41 @@ class HomeFragment : Fragment() {
                 viewModel.toggleTaskStatus(task.id, isChecked)
             }
         )
-
         binding.rvTasks.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvTasks.adapter = adapter
+        binding.rvTasks.adapter = tasksAdapter
     }
 
     private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.homeState.collect { state ->
-                    when (state) {
-                        is HomeState.Empty -> {
+                viewModel.uiState.collect { state ->
+
+                    categoriesAdapter.updateData(state.categories, state.selectedCategory)
+
+                    when (state.tasksState) {
+                        is HomeTasksState.Empty -> {
                             binding.rvTasks.visibility = View.GONE
                             binding.llNoTasks.visibility = View.VISIBLE
                         }
 
-                        is HomeState.Loading -> {
+                        is HomeTasksState.Loading -> {
                             binding.rvTasks.visibility = View.GONE
                             binding.llNoTasks.visibility = View.GONE
                         }
 
-                        is HomeState.Success -> {
+                        is HomeTasksState.Success -> {
                             binding.rvTasks.visibility = View.VISIBLE
                             binding.llNoTasks.visibility = View.GONE
-                            adapter.submitList(state.tasks)
+                            tasksAdapter.submitList(state.tasksState.tasks)
                         }
 
-                        is HomeState.Error -> {
+                        is HomeTasksState.Error -> {
                             binding.llNoTasks.visibility = View.GONE
-                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(
+                                requireContext(),
+                                state.tasksState.message,
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }

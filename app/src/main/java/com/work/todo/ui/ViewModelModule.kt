@@ -12,27 +12,27 @@ val viewModelModule = module {
 
     viewModel<AddTaskViewModel> {
         AddTaskViewModel(
-            taskDao = get()
+            taskRepository = get()
         )
     }
     viewModel<HomeViewModel> {
         HomeViewModel(
-            taskDao = get()
+            taskRepository = get()
         )
     }
     viewModel<EditTaskViewModel> {
         EditTaskViewModel(
-            taskDao = get()
+            taskRepository = get()
         )
     }
     viewModel<CalendarViewModel> {
         CalendarViewModel(
-            taskDao = get()
+            taskRepository = get()
         )
     }
     viewModel<AllTasksViewModel> {
         AllTasksViewModel(
-            taskDao = get()
+            taskRepository = get()
         )
     }
 

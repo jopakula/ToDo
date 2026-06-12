@@ -1,10 +1,10 @@
 package com.work.todo.ui.mapper
 
-import com.work.todo.database.TaskEntity
+import com.work.todo.domain.Task
 import com.work.todo.ui.home.task.HomeTaskItem
 
 object TaskMapper {
-    fun mapToUi(entity: TaskEntity): HomeTaskItem {
+    fun mapToUi(entity: Task): HomeTaskItem {
         return HomeTaskItem(
             id = entity.id,
             title = entity.title,
@@ -13,7 +13,7 @@ object TaskMapper {
         )
     }
 
-    fun mapToUiList(entities: List<TaskEntity>): List<HomeTaskItem> {
+    fun mapToUiList(entities: List<Task>): List<HomeTaskItem> {
         return entities.map { mapToUi(it) }
     }
 }
